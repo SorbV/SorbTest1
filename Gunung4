@@ -1,0 +1,229 @@
+--==================================================
+-- THANHUB STYLE UI (UI ONLY)
+-- Size 1:1 ThanHub + Tab Method System
+--==================================================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--==================================================
+-- CONFIG (1:1 THANHUB)
+--==================================================
+local CONFIG = {
+	WINDOW_SIZE = Vector2.new(650, 380),
+	TOPBAR_HEIGHT = 48,
+	SIDEBAR_WIDTH = 190,
+
+	CORNER_MAIN = 16,
+	CORNER_BOX = 10,
+
+	PADDING = 18,
+	TAB_HEIGHT = 42,
+	TAB_SPACING = 6,
+}
+
+--==================================================
+-- MAIN CLASS
+--==================================================
+local UI = {}
+UI.__index = UI
+
+--==================================================
+-- CREATE
+--==================================================
+function UI.new(title)
+	local self = setmetatable({}, UI)
+
+	self.Tabs = {}
+	self.CurrentTab = nil
+
+	-- ScreenGui
+	local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+	ScreenGui.Name = "ThanHub_UI"
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.DisplayOrder = 999999
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+	self.Gui = ScreenGui
+
+	-- Main
+	local Main = Instance.new("Frame", ScreenGui)
+	Main.Size = UDim2.fromOffset(CONFIG.WINDOW_SIZE.X, CONFIG.WINDOW_SIZE.Y)
+	Main.Position = UDim2.fromScale(0.5, 0.5)
+	Main.AnchorPoint = Vector2.new(0.5, 0.5)
+	Main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Main.BackgroundTransparency = 0.25
+	Main.BorderSizePixel = 0
+	Main.Active = true
+	Instance.new("UICorner", Main).CornerRadius = UDim.new(0, CONFIG.CORNER_MAIN)
+	self.Main = Main
+
+	-- Topbar
+	local Top = Instance.new("Frame", Main)
+	Top.Size = UDim2.new(1,0,0,CONFIG.TOPBAR_HEIGHT)
+	Top.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Top.BackgroundTransparency = 0.3
+	Top.BorderSizePixel = 0
+	Top.Active = true
+	Instance.new("UICorner", Top).CornerRadius = UDim.new(0, CONFIG.CORNER_MAIN)
+	self.Top = Top
+
+	local Title = Instance.new("TextLabel", Top)
+	Title.Size = UDim2.new(1,-40,1,0)
+	Title.Position = UDim2.new(0,20,0,0)
+	Title.BackgroundTransparency = 1
+	Title.Text = title or "THANHUB || PREMIUM"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 14
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.TextXAlignment = Enum.TextXAlignment.Left
+
+	-- Sidebar
+	local Sidebar = Instance.new("Frame", Main)
+	Sidebar.Size = UDim2.new(0,CONFIG.SIDEBAR_WIDTH,1,-68)
+	Sidebar.Position = UDim2.new(0,10,0,58)
+	Sidebar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Sidebar.BackgroundTransparency = 0.35
+	Sidebar.BorderSizePixel = 0
+	Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, CONFIG.CORNER_BOX)
+	self.Sidebar = Sidebar
+
+	local SList = Instance.new("UIListLayout", Sidebar)
+	SList.Padding = UDim.new(0, CONFIG.TAB_SPACING)
+	SList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+	local SPad = Instance.new("UIPadding", Sidebar)
+	SPad.PaddingTop = UDim.new(0,10)
+
+	-- Content Holder
+	local ContentHolder = Instance.new("Frame", Main)
+	ContentHolder.Size = UDim2.new(1,-220,1,-78)
+	ContentHolder.Position = UDim2.new(0,210,0,58)
+	ContentHolder.BackgroundTransparency = 1
+	self.ContentHolder = ContentHolder
+
+	-- Drag
+	self:_DragSystem()
+
+	return self
+end
+
+--==================================================
+-- DRAG
+--==================================================
+function UI:_DragSystem()
+	local drag, start, pos
+
+	self.Top.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			drag = true
+			start = i.Position
+			pos = self.Main.Position
+
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					drag = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(i)
+		if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = i.Position - start
+			self.Main.Position = UDim2.new(
+				pos.X.Scale, pos.X.Offset + delta.X,
+				pos.Y.Scale, pos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+--==================================================
+-- TAB METHOD
+--==================================================
+function UI:CreateTab(name)
+	-- Content
+	local TabFrame = Instance.new("ScrollingFrame", self.ContentHolder)
+	TabFrame.Name = name.."Tab"
+	TabFrame.Size = UDim2.new(1,0,1,0)
+	TabFrame.ScrollBarThickness = 6
+	TabFrame.ScrollBarImageTransparency = 0.3
+	TabFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	TabFrame.BackgroundTransparency = 0.35
+	TabFrame.BorderSizePixel = 0
+	TabFrame.Visible = false
+	Instance.new("UICorner", TabFrame).CornerRadius = UDim.new(0,12)
+
+	local Pad = Instance.new("UIPadding", TabFrame)
+	Pad.PaddingTop = UDim.new(0,18)
+	Pad.PaddingBottom = UDim.new(0,18)
+	Pad.PaddingLeft = UDim.new(0,18)
+	Pad.PaddingRight = UDim.new(0,18)
+
+	local List = Instance.new("UIListLayout", TabFrame)
+	List.Padding = UDim.new(0,14)
+	List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		TabFrame.CanvasSize = UDim2.new(0,0,0,List.AbsoluteContentSize.Y + 20)
+	end)
+
+	-- Sidebar Button
+	local Btn = Instance.new("TextButton", self.Sidebar)
+	Btn.Size = UDim2.new(1,-16,0,CONFIG.TAB_HEIGHT)
+	Btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Btn.BackgroundTransparency = 0.45
+	Btn.Text = ""
+	Btn.BorderSizePixel = 0
+	Btn.AutoButtonColor = false
+	Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,8)
+
+	local Txt = Instance.new("TextLabel", Btn)
+	Txt.Size = UDim2.new(1,-16,1,0)
+	Txt.Position = UDim2.new(0,12,0,0)
+	Txt.BackgroundTransparency = 1
+	Txt.Text = name
+	Txt.Font = Enum.Font.GothamBold
+	Txt.TextSize = 14
+	Txt.TextColor3 = Color3.fromRGB(230,230,230)
+	Txt.TextXAlignment = Enum.TextXAlignment.Left
+
+	Btn.MouseButton1Click:Connect(function()
+		if self.CurrentTab then
+			self.CurrentTab.Visible = false
+		end
+		TabFrame.Visible = true
+		self.CurrentTab = TabFrame
+	end)
+
+	if not self.CurrentTab then
+		TabFrame.Visible = true
+		self.CurrentTab = TabFrame
+	end
+
+	return TabFrame
+end
+
+--==================================================
+-- BASIC ELEMENT
+--==================================================
+function UI:Label(parent, text, size, bold)
+	local t = Instance.new("TextLabel", parent)
+	t.Size = UDim2.new(1,0,0,size)
+	t.BackgroundTransparency = 1
+	t.TextWrapped = true
+	t.TextXAlignment = Left
+	t.TextYAlignment = Top
+	t.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+	t.TextSize = size
+	t.TextColor3 = Color3.fromRGB(220,230,255)
+	t.Text = text
+	return t
+end
+
+--==================================================
+-- RETURN
+--==================================================
+return UI
