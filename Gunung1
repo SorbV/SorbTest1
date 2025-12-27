@@ -1,0 +1,855 @@
+-- LimeHub Modern Glassmorphism UI
+-- Premium, Calm, Clean Design
+-- Full Script - No Limits
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Premium Color Palette
+local COLORS = {
+	PRIMARY_DARK = Color3.fromRGB(15, 20, 35),
+	PRIMARY = Color3.fromRGB(20, 28, 48),
+	PRIMARY_LIGHT = Color3.fromRGB(28, 38, 62),
+	ACCENT = Color3.fromRGB(88, 140, 220),
+	ACCENT_MUTED = Color3.fromRGB(70, 110, 180),
+	TEXT_PRIMARY = Color3.fromRGB(220, 230, 245),
+	TEXT_SECONDARY = Color3.fromRGB(150, 165, 190),
+	TEXT_MUTED = Color3.fromRGB(100, 115, 145),
+	BORDER = Color3.fromRGB(180, 200, 230),
+	CARD_BG = Color3.fromRGB(32, 42, 68),
+	TOGGLE_OFF = Color3.fromRGB(40, 50, 75),
+	TOGGLE_ON = Color3.fromRGB(70, 110, 180),
+}
+
+local CONFIG = {
+	WINDOW_SIZE = Vector2.new(780, 520),
+	CORNER_RADIUS = 20,
+	SIDEBAR_WIDTH = 180,
+	TOPBAR_HEIGHT = 55,
+	PADDING = 20,
+	TAB_HEIGHT = 42,
+	TAB_SPACING = 6,
+	INDICATOR_WIDTH = 3,
+	CARD_CORNER = 14,
+	CARD_PADDING = 18,
+	TOGGLE_WIDTH = 42,
+	TOGGLE_HEIGHT = 22,
+	KNOB_SIZE = 16,
+	WINDOW_TRANSPARENCY = 0.15,
+	SIDEBAR_TRANSPARENCY = 0.22,
+	CARD_TRANSPARENCY = 0.18,
+	BORDER_TRANSPARENCY = 0.75,
+	TWEEN_TIME = 0.35,
+	TWEEN_STYLE = Enum.EasingStyle.Sine,
+	TWEEN_DIRECTION = Enum.EasingDirection.Out,
+}
+
+local function createTween(instance, properties, duration)
+	local info = TweenInfo.new(duration or CONFIG.TWEEN_TIME, CONFIG.TWEEN_STYLE, CONFIG.TWEEN_DIRECTION)
+	local tween = TweenService:Create(instance, info, properties)
+	tween:Play()
+	return tween
+end
+
+local function applyCorner(instance, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or CONFIG.CORNER_RADIUS)
+	corner.Parent = instance
+	return corner
+end
+
+local function applyStroke(instance, thickness, transparency, color)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color or COLORS.BORDER
+	stroke.Thickness = thickness or 1
+	stroke.Transparency = transparency or CONFIG.BORDER_TRANSPARENCY
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = instance
+	return stroke
+end
+
+local function applyShadow(instance)
+	local shadow = Instance.new("ImageLabel")
+	shadow.Name = "Shadow"
+	shadow.Size = UDim2.new(1, 40, 1, 40)
+	shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	shadow.BackgroundTransparency = 1
+	shadow.Image = "rbxassetid://5554236805"
+	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+	shadow.ImageTransparency = 0.7
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+	shadow.ZIndex = instance.ZIndex - 1
+	shadow.Parent = instance
+	return shadow
+end
+
+local function applyPadding(instance, padding)
+	local pad = Instance.new("UIPadding")
+	if type(padding) == "number" then
+		pad.PaddingTop = UDim.new(0, padding)
+		pad.PaddingBottom = UDim.new(0, padding)
+		pad.PaddingLeft = UDim.new(0, padding)
+		pad.PaddingRight = UDim.new(0, padding)
+	else
+		pad.PaddingTop = UDim.new(0, padding.Top or 0)
+		pad.PaddingBottom = UDim.new(0, padding.Bottom or 0)
+		pad.PaddingLeft = UDim.new(0, padding.Left or 0)
+		pad.PaddingRight = UDim.new(0, padding.Right or 0)
+	end
+	pad.Parent = instance
+	return pad
+end
+
+local LimeHub = {}
+LimeHub.__index = LimeHub
+
+function LimeHub.new()
+	local self = setmetatable({}, LimeHub)
+	self.tabs = {}
+	self.currentTab = nil
+	self:createScreenGui()
+	self:createMainWindow()
+	self:createTopBar()
+	self:createSidebar()
+	self:createContentPanel()
+	return self
+end
+
+function LimeHub:createScreenGui()
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LimeHubUI"
+	gui.ResetOnSpawn = false
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	gui.IgnoreGuiInset = true
+	gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+	self.gui = gui
+end
+
+function LimeHub:createMainWindow()
+	local main = Instance.new("Frame")
+	main.Name = "MainWindow"
+	main.Size = UDim2.new(0, CONFIG.WINDOW_SIZE.X, 0, CONFIG.WINDOW_SIZE.Y)
+	main.Position = UDim2.new(0.5, 0, 0.5, 0)
+	main.AnchorPoint = Vector2.new(0.5, 0.5)
+	main.BackgroundColor3 = COLORS.PRIMARY
+	main.BackgroundTransparency = CONFIG.WINDOW_TRANSPARENCY
+	main.BorderSizePixel = 0
+	main.ClipsDescendants = true
+	main.Parent = self.gui
+	self.main = main
+	applyCorner(main, CONFIG.CORNER_RADIUS)
+	applyStroke(main, 1.2, CONFIG.BORDER_TRANSPARENCY)
+	applyShadow(main)
+	
+	local blurBg = Instance.new("Frame")
+	blurBg.Name = "BlurBackground"
+	blurBg.Size = UDim2.new(1, 0, 1, 0)
+	blurBg.BackgroundColor3 = COLORS.PRIMARY_DARK
+	blurBg.BackgroundTransparency = 0.3
+	blurBg.BorderSizePixel = 0
+	blurBg.ZIndex = main.ZIndex - 1
+	blurBg.Parent = main
+	
+	self:makeDraggable(main)
+end
+
+function LimeHub:createTopBar()
+	local topbar = Instance.new("Frame")
+	topbar.Name = "TopBar"
+	topbar.Size = UDim2.new(1, 0, 0, CONFIG.TOPBAR_HEIGHT)
+	topbar.BackgroundColor3 = COLORS.PRIMARY_LIGHT
+	topbar.BackgroundTransparency = 0.25
+	topbar.BorderSizePixel = 0
+	topbar.Parent = self.main
+	applyCorner(topbar, CONFIG.CORNER_RADIUS)
+	
+	local cornerMask = Instance.new("Frame")
+	cornerMask.Size = UDim2.new(1, 0, 0, CONFIG.CORNER_RADIUS)
+	cornerMask.Position = UDim2.new(0, 0, 1, -CONFIG.CORNER_RADIUS)
+	cornerMask.BackgroundColor3 = COLORS.PRIMARY_LIGHT
+	cornerMask.BackgroundTransparency = 0.25
+	cornerMask.BorderSizePixel = 0
+	cornerMask.Parent = topbar
+	
+	local icon = Instance.new("TextLabel")
+	icon.Size = UDim2.new(0, 30, 0, 30)
+	icon.Position = UDim2.new(0, 18, 0.5, 0)
+	icon.AnchorPoint = Vector2.new(0, 0.5)
+	icon.BackgroundTransparency = 1
+	icon.Text = "🍋"
+	icon.TextSize = 18
+	icon.Font = Enum.Font.Gotham
+	icon.Parent = topbar
+	
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(0, 300, 0, 22)
+	title.Position = UDim2.new(0, 55, 0.5, -7)
+	title.AnchorPoint = Vector2.new(0, 0.5)
+	title.BackgroundTransparency = 1
+	title.Text = "LimeHub"
+	title.TextColor3 = COLORS.TEXT_PRIMARY
+	title.TextSize = 16
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = topbar
+	
+	local subtitle = Instance.new("TextLabel")
+	subtitle.Size = UDim2.new(0, 300, 0, 16)
+	subtitle.Position = UDim2.new(0, 55, 0.5, 10)
+	subtitle.AnchorPoint = Vector2.new(0, 0.5)
+	subtitle.BackgroundTransparency = 1
+	subtitle.Text = "Grow A Garden v3.5"
+	subtitle.TextColor3 = COLORS.TEXT_SECONDARY
+	subtitle.TextSize = 11
+	subtitle.Font = Enum.Font.Gotham
+	subtitle.TextXAlignment = Enum.TextXAlignment.Left
+	subtitle.Parent = topbar
+	
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Size = UDim2.new(0, 36, 0, 36)
+	closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
+	closeBtn.AnchorPoint = Vector2.new(0, 0.5)
+	closeBtn.BackgroundColor3 = COLORS.PRIMARY_LIGHT
+	closeBtn.BackgroundTransparency = 0.4
+	closeBtn.BorderSizePixel = 0
+	closeBtn.Text = "✕"
+	closeBtn.TextColor3 = COLORS.TEXT_SECONDARY
+	closeBtn.TextSize = 16
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.AutoButtonColor = false
+	closeBtn.Parent = topbar
+	applyCorner(closeBtn, 10)
+	
+	closeBtn.MouseEnter:Connect(function()
+		createTween(closeBtn, {BackgroundTransparency = 0.2, TextColor3 = COLORS.TEXT_PRIMARY}, 0.2)
+	end)
+	closeBtn.MouseLeave:Connect(function()
+		createTween(closeBtn, {BackgroundTransparency = 0.4, TextColor3 = COLORS.TEXT_SECONDARY}, 0.2)
+	end)
+	closeBtn.MouseButton1Click:Connect(function()
+		createTween(self.main, {Size = UDim2.new(0, 0, 0, 0)}, 0.25)
+		wait(0.25)
+		self.gui:Destroy()
+	end)
+end
+
+function LimeHub:createSidebar()
+	local sidebar = Instance.new("Frame")
+	sidebar.Name = "Sidebar"
+	sidebar.Size = UDim2.new(0, CONFIG.SIDEBAR_WIDTH, 1, -CONFIG.TOPBAR_HEIGHT)
+	sidebar.Position = UDim2.new(0, 0, 0, CONFIG.TOPBAR_HEIGHT)
+	sidebar.BackgroundColor3 = COLORS.PRIMARY_DARK
+	sidebar.BackgroundTransparency = CONFIG.SIDEBAR_TRANSPARENCY
+	sidebar.BorderSizePixel = 0
+	sidebar.Parent = self.main
+	self.sidebar = sidebar
+	
+	local separator = Instance.new("Frame")
+	separator.Size = UDim2.new(0, 1, 1, 0)
+	separator.Position = UDim2.new(1, 0, 0, 0)
+	separator.BackgroundColor3 = COLORS.BORDER
+	separator.BackgroundTransparency = 0.85
+	separator.BorderSizePixel = 0
+	separator.Parent = sidebar
+	
+	local tabContainer = Instance.new("ScrollingFrame")
+	tabContainer.Name = "TabContainer"
+	tabContainer.Size = UDim2.new(1, 0, 1, 0)
+	tabContainer.BackgroundTransparency = 1
+	tabContainer.BorderSizePixel = 0
+	tabContainer.ScrollBarThickness = 3
+	tabContainer.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	tabContainer.ScrollBarImageTransparency = 0.6
+	tabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+	tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	tabContainer.Parent = sidebar
+	self.tabContainer = tabContainer
+	applyPadding(tabContainer, {Top = 12, Bottom = 12, Left = 10, Right = 10})
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, CONFIG.TAB_SPACING)
+	listLayout.Parent = tabContainer
+end
+
+function LimeHub:createContentPanel()
+	local content = Instance.new("Frame")
+	content.Name = "ContentPanel"
+	content.Size = UDim2.new(1, -CONFIG.SIDEBAR_WIDTH, 1, -CONFIG.TOPBAR_HEIGHT)
+	content.Position = UDim2.new(0, CONFIG.SIDEBAR_WIDTH, 0, CONFIG.TOPBAR_HEIGHT)
+	content.BackgroundTransparency = 1
+	content.BorderSizePixel = 0
+	content.ClipsDescendants = true
+	content.Parent = self.main
+	self.contentPanel = content
+end
+
+function LimeHub:addTab(name, icon, builder)
+	local tabButton = Instance.new("TextButton")
+	tabButton.Name = name
+	tabButton.Size = UDim2.new(1, 0, 0, CONFIG.TAB_HEIGHT)
+	tabButton.BackgroundTransparency = 1
+	tabButton.BorderSizePixel = 0
+	tabButton.Text = ""
+	tabButton.AutoButtonColor = false
+	tabButton.Parent = self.tabContainer
+	
+	local indicator = Instance.new("Frame")
+	indicator.Name = "Indicator"
+	indicator.Size = UDim2.new(0, CONFIG.INDICATOR_WIDTH, 0, 0)
+	indicator.Position = UDim2.new(0, 0, 0.5, 0)
+	indicator.AnchorPoint = Vector2.new(0, 0.5)
+	indicator.BackgroundColor3 = COLORS.ACCENT
+	indicator.BorderSizePixel = 0
+	indicator.Parent = tabButton
+	applyCorner(indicator, 2)
+	
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Size = UDim2.new(0, 24, 0, 24)
+	iconLabel.Position = UDim2.new(0, 14, 0.5, 0)
+	iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = icon or "📄"
+	iconLabel.TextColor3 = COLORS.TEXT_SECONDARY
+	iconLabel.TextSize = 16
+	iconLabel.Font = Enum.Font.Gotham
+	iconLabel.Parent = tabButton
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -50, 1, 0)
+	label.Position = UDim2.new(0, 45, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = COLORS.TEXT_SECONDARY
+	label.TextSize = 13
+	label.Font = Enum.Font.GothamMedium
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = tabButton
+	
+	tabButton.MouseEnter:Connect(function()
+		if self.currentTab ~= name then
+			createTween(iconLabel, {TextColor3 = COLORS.TEXT_PRIMARY}, 0.2)
+			createTween(label, {TextColor3 = COLORS.TEXT_PRIMARY}, 0.2)
+		end
+	end)
+	tabButton.MouseLeave:Connect(function()
+		if self.currentTab ~= name then
+			createTween(iconLabel, {TextColor3 = COLORS.TEXT_SECONDARY}, 0.2)
+			createTween(label, {TextColor3 = COLORS.TEXT_SECONDARY}, 0.2)
+		end
+	end)
+	tabButton.MouseButton1Click:Connect(function()
+		self:switchTab(name)
+	end)
+	
+	self.tabs[name] = {button = tabButton, indicator = indicator, icon = iconLabel, label = label, builder = builder}
+	if not self.currentTab then self:switchTab(name) end
+end
+
+function LimeHub:switchTab(tabName)
+	local newTab = self.tabs[tabName]
+	if not newTab then return end
+	
+	if self.currentTab then
+		local oldTab = self.tabs[self.currentTab]
+		if oldTab then
+			createTween(oldTab.indicator, {Size = UDim2.new(0, CONFIG.INDICATOR_WIDTH, 0, 0)})
+			createTween(oldTab.icon, {TextColor3 = COLORS.TEXT_SECONDARY})
+			createTween(oldTab.label, {TextColor3 = COLORS.TEXT_SECONDARY})
+		end
+	end
+	
+	createTween(newTab.indicator, {Size = UDim2.new(0, CONFIG.INDICATOR_WIDTH, 0.55, 0)})
+	createTween(newTab.icon, {TextColor3 = COLORS.ACCENT})
+	createTween(newTab.label, {TextColor3 = COLORS.TEXT_PRIMARY})
+	self.currentTab = tabName
+	
+	for _, child in ipairs(self.contentPanel:GetChildren()) do child:Destroy() end
+	if newTab.builder then newTab.builder(self.contentPanel, self) end
+end
+
+function LimeHub:createToggle(parent, labelText, defaultState, callback)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 50)
+	container.BackgroundColor3 = COLORS.CARD_BG
+	container.BackgroundTransparency = CONFIG.CARD_TRANSPARENCY
+	container.BorderSizePixel = 0
+	container.Parent = parent
+	applyCorner(container, CONFIG.CARD_CORNER)
+	applyStroke(container, 1, 0.88, COLORS.BORDER)
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -70, 1, 0)
+	label.Position = UDim2.new(0, CONFIG.CARD_PADDING, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextColor3 = COLORS.TEXT_PRIMARY
+	label.TextSize = 13
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = container
+	
+	local toggleBg = Instance.new("Frame")
+	toggleBg.Size = UDim2.new(0, CONFIG.TOGGLE_WIDTH, 0, CONFIG.TOGGLE_HEIGHT)
+	toggleBg.Position = UDim2.new(1, -CONFIG.TOGGLE_WIDTH - CONFIG.CARD_PADDING, 0.5, 0)
+	toggleBg.AnchorPoint = Vector2.new(0, 0.5)
+	toggleBg.BackgroundColor3 = defaultState and COLORS.TOGGLE_ON or COLORS.TOGGLE_OFF
+	toggleBg.BorderSizePixel = 0
+	toggleBg.Parent = container
+	applyCorner(toggleBg, CONFIG.TOGGLE_HEIGHT / 2)
+	
+	local knob = Instance.new("Frame")
+	knob.Size = UDim2.new(0, CONFIG.KNOB_SIZE, 0, CONFIG.KNOB_SIZE)
+	knob.Position = defaultState and UDim2.new(1, -CONFIG.KNOB_SIZE - 3, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+	knob.AnchorPoint = Vector2.new(0, 0.5)
+	knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	knob.BorderSizePixel = 0
+	knob.Parent = toggleBg
+	applyCorner(knob, CONFIG.KNOB_SIZE / 2)
+	
+	local state = defaultState
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, 0, 1, 0)
+	button.BackgroundTransparency = 1
+	button.Text = ""
+	button.Parent = container
+	
+	button.MouseButton1Click:Connect(function()
+		state = not state
+		local targetPos = state and UDim2.new(1, -CONFIG.KNOB_SIZE - 3, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+		local targetColor = state and COLORS.TOGGLE_ON or COLORS.TOGGLE_OFF
+		createTween(knob, {Position = targetPos}, 0.3)
+		createTween(toggleBg, {BackgroundColor3 = targetColor}, 0.3)
+		if callback then callback(state) end
+	end)
+	return container
+end
+
+function LimeHub:createDropdown(parent, labelText, options, defaultOption, callback)
+	local expanded = false
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 50)
+	container.BackgroundColor3 = COLORS.CARD_BG
+	container.BackgroundTransparency = CONFIG.CARD_TRANSPARENCY
+	container.BorderSizePixel = 0
+	container.ClipsDescendants = false
+	container.ZIndex = 2
+	container.Parent = parent
+	applyCorner(container, CONFIG.CARD_CORNER)
+	applyStroke(container, 1, 0.88, COLORS.BORDER)
+	
+	local header = Instance.new("TextButton")
+	header.Size = UDim2.new(1, 0, 0, 50)
+	header.BackgroundTransparency = 1
+	header.Text = ""
+	header.Parent = container
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -60, 1, 0)
+	label.Position = UDim2.new(0, CONFIG.CARD_PADDING, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextColor3 = COLORS.TEXT_PRIMARY
+	label.TextSize = 13
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = header
+	
+	local arrow = Instance.new("TextLabel")
+	arrow.Size = UDim2.new(0, 20, 0, 20)
+	arrow.Position = UDim2.new(1, -CONFIG.CARD_PADDING - 20, 0.5, 0)
+	arrow.AnchorPoint = Vector2.new(0, 0.5)
+	arrow.BackgroundTransparency = 1
+	arrow.Text = "▼"
+	arrow.TextColor3 = COLORS.TEXT_MUTED
+	arrow.TextSize = 10
+	arrow.Font = Enum.Font.Gotham
+	arrow.Parent = header
+	
+	local optionsContainer = Instance.new("Frame")
+	optionsContainer.Size = UDim2.new(1, 0, 0, 0)
+	optionsContainer.Position = UDim2.new(0, 0, 0, 50)
+	optionsContainer.BackgroundTransparency = 1
+	optionsContainer.ClipsDescendants = true
+	optionsContainer.ZIndex = 3
+	optionsContainer.Parent = container
+	
+	local optionsList = Instance.new("Frame")
+	optionsList.Size = UDim2.new(1, 0, 1, 0)
+	optionsList.BackgroundColor3 = COLORS.PRIMARY_DARK
+	optionsList.BackgroundTransparency = 0.1
+	optionsList.BorderSizePixel = 0
+	optionsList.Parent = optionsContainer
+	applyCorner(optionsList, CONFIG.CARD_CORNER)
+	applyStroke(optionsList, 1, 0.88, COLORS.BORDER)
+	applyPadding(optionsList, 6)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 4)
+	listLayout.Parent = optionsList
+	
+	for _, option in ipairs(options) do
+		local optionBtn = Instance.new("TextButton")
+		optionBtn.Size = UDim2.new(1, 0, 0, 36)
+		optionBtn.BackgroundColor3 = COLORS.PRIMARY_LIGHT
+		optionBtn.BackgroundTransparency = 0.5
+		optionBtn.BorderSizePixel = 0
+		optionBtn.Text = option
+		optionBtn.TextColor3 = COLORS.TEXT_SECONDARY
+		optionBtn.TextSize = 12
+		optionBtn.Font = Enum.Font.Gotham
+		optionBtn.AutoButtonColor = false
+		optionBtn.Parent = optionsList
+		applyCorner(optionBtn, 8)
+		
+		optionBtn.MouseEnter:Connect(function()
+			createTween(optionBtn, {BackgroundTransparency = 0.2, TextColor3 = COLORS.TEXT_PRIMARY}, 0.2)
+		end)
+		optionBtn.MouseLeave:Connect(function()
+			createTween(optionBtn, {BackgroundTransparency = 0.5, TextColor3 = COLORS.TEXT_SECONDARY}, 0.2)
+		end)
+		optionBtn.MouseButton1Click:Connect(function()
+			if callback then callback(option) end
+			expanded = false
+			createTween(optionsContainer, {Size = UDim2.new(1, 0, 0, 0)}, 0.3)
+			createTween(container, {Size = UDim2.new(1, 0, 0, 50)}, 0.3)
+			createTween(arrow, {Rotation = 0}, 0.3)
+		end)
+	end
+	
+	header.MouseButton1Click:Connect(function()
+		expanded = not expanded
+		local optionsHeight = #options * 40 + 12
+		local targetOptionsSize = expanded and UDim2.new(1, 0, 0, optionsHeight) or UDim2.new(1, 0, 0, 0)
+		local targetContainerSize = expanded and UDim2.new(1, 0, 0, 50 + optionsHeight) or UDim2.new(1, 0, 0, 50)
+		createTween(optionsContainer, {Size = targetOptionsSize}, 0.3)
+		createTween(container, {Size = targetContainerSize}, 0.3)
+		createTween(arrow, {Rotation = expanded and 180 or 0}, 0.3)
+	end)
+	return container
+end
+
+function LimeHub:createInfoCard(parent, title, content)
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, 0, 0, 120)
+	card.BackgroundColor3 = COLORS.CARD_BG
+	card.BackgroundTransparency = CONFIG.CARD_TRANSPARENCY
+	card.BorderSizePixel = 0
+	card.Parent = parent
+	applyCorner(card, CONFIG.CARD_CORNER)
+	applyStroke(card, 1, 0.88, COLORS.BORDER)
+	applyPadding(card, CONFIG.CARD_PADDING)
+	
+	local shadow = Instance.new("ImageLabel")
+	shadow.Name = "CardShadow"
+	shadow.Size = UDim2.new(1, 20, 1, 20)
+	shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+	shadow.BackgroundTransparency = 1
+	shadow.Image = "rbxassetid://5554236805"
+	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+	shadow.ImageTransparency = 0.85
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+	shadow.ZIndex = card.ZIndex - 1
+	shadow.Parent = card
+	
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, 0, 0, 24)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = title
+	titleLabel.TextColor3 = COLORS.TEXT_PRIMARY
+	titleLabel.TextSize = 15
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextYAlignment = Enum.TextYAlignment.Top
+	titleLabel.Parent = card
+	
+	local contentLabel = Instance.new("TextLabel")
+	contentLabel.Size = UDim2.new(1, 0, 1, -30)
+	contentLabel.Position = UDim2.new(0, 0, 0, 30)
+	contentLabel.BackgroundTransparency = 1
+	contentLabel.Text = content
+	contentLabel.TextColor3 = COLORS.TEXT_SECONDARY
+	contentLabel.TextSize = 12
+	contentLabel.Font = Enum.Font.Gotham
+		contentLabel.TextYAlignment = Enum.TextYAlignment.Top
+	contentLabel.TextWrapped = true
+	contentLabel.Parent = card
+	
+	return card
+end
+
+function LimeHub:makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		local targetPos = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+		createTween(frame, {Position = targetPos}, 0.05)
+	end
+	
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+		   input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or 
+		   input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+-- Initialize UI
+local hub = LimeHub.new()
+
+-- Home Tab
+hub:addTab("Home", "🏠", function(content, ui)
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 4
+	scrollFrame.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	scrollFrame.ScrollBarImageTransparency = 0.5
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scrollFrame.Parent = content
+	applyPadding(scrollFrame, CONFIG.PADDING)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Parent = scrollFrame
+	
+	ui:createInfoCard(scrollFrame, "Welcome to LimeHub", 
+		"Premium exploit hub designed for Grow A Garden.\nClean, modern, and powerful automation features.")
+	
+	ui:createToggle(scrollFrame, "Auto Farm Enabled", false, function(state)
+		print("Auto Farm:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Collect Fruits", true, function(state)
+		print("Auto Collect:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Water Plants", false, function(state)
+		print("Auto Water:", state)
+	end)
+	
+	ui:createDropdown(scrollFrame, "Farm Speed Mode", 
+		{"Fast", "Balanced", "Safe", "Stealth"}, 
+		"Balanced", 
+		function(selected)
+			print("Farm Speed:", selected)
+		end
+	)
+end)
+
+-- Main Tab
+hub:addTab("Main", "🎮", function(content, ui)
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 4
+	scrollFrame.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	scrollFrame.ScrollBarImageTransparency = 0.5
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scrollFrame.Parent = content
+	applyPadding(scrollFrame, CONFIG.PADDING)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Parent = scrollFrame
+	
+	ui:createInfoCard(scrollFrame, "Best Fruit [Farm]", 
+		"Name: Candy Blossom\nWeight: 126 KG\nValue: $1,685,833,863.571\nMutation: Meteoric, Celestial, Moonlit, Windstruck")
+	
+	ui:createToggle(scrollFrame, "Speed Boost (2x)", false, function(state)
+		print("Speed Boost:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Jump Power Boost", false, function(state)
+		print("Jump Boost:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Infinite Stamina", false, function(state)
+		print("Infinite Stamina:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "No Clip (Walk Through Walls)", false, function(state)
+		print("No Clip:", state)
+	end)
+	
+	ui:createDropdown(scrollFrame, "Quick Teleport", 
+		{"Spawn", "Farm Area", "Shop", "Garden Center", "Storage"}, 
+		"Spawn", 
+		function(selected)
+			print("Teleport to:", selected)
+		end
+	)
+end)
+
+-- Pets Tab
+hub:addTab("Pets", "🐾", function(content, ui)
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 4
+	scrollFrame.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	scrollFrame.ScrollBarImageTransparency = 0.5
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scrollFrame.Parent = content
+	applyPadding(scrollFrame, CONFIG.PADDING)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Parent = scrollFrame
+	
+	ui:createInfoCard(scrollFrame, "Pet Management", 
+		"Manage your pets and automation settings.\nAuto-equip best pets for maximum profit.")
+	
+	ui:createToggle(scrollFrame, "Auto Equip Best Pets", true, function(state)
+		print("Auto Equip Pets:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Hatch Eggs", false, function(state)
+		print("Auto Hatch:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Delete Common Pets", false, function(state)
+		print("Auto Delete Common:", state)
+	end)
+	
+	ui:createDropdown(scrollFrame, "Pet Rarity Filter", 
+		{"All", "Rare+", "Epic+", "Legendary Only"}, 
+		"Rare+", 
+		function(selected)
+			print("Rarity Filter:", selected)
+		end
+	)
+end)
+
+-- Shop Tab
+hub:addTab("Shop", "🛒", function(content, ui)
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 4
+	scrollFrame.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	scrollFrame.ScrollBarImageTransparency = 0.5
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scrollFrame.Parent = content
+	applyPadding(scrollFrame, CONFIG.PADDING)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Parent = scrollFrame
+	
+	ui:createInfoCard(scrollFrame, "Auto Purchase System", 
+		"Automatically purchase items and upgrades.\nSmart spending for optimal progression.")
+	
+	ui:createToggle(scrollFrame, "Auto Buy Seeds", false, function(state)
+		print("Auto Buy Seeds:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Buy Upgrades", false, function(state)
+		print("Auto Buy Upgrades:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Buy Tools", false, function(state)
+		print("Auto Buy Tools:", state)
+	end)
+	
+	ui:createDropdown(scrollFrame, "Spending Priority", 
+		{"Seeds First", "Upgrades First", "Balanced", "Tools Only"}, 
+		"Balanced", 
+		function(selected)
+			print("Spending Priority:", selected)
+		end
+	)
+end)
+
+-- Settings Tab
+hub:addTab("Settings", "⚙️", function(content, ui)
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 4
+	scrollFrame.ScrollBarImageColor3 = COLORS.TEXT_MUTED
+	scrollFrame.ScrollBarImageTransparency = 0.5
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scrollFrame.Parent = content
+	applyPadding(scrollFrame, CONFIG.PADDING)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 12)
+	listLayout.Parent = scrollFrame
+	
+	ui:createInfoCard(scrollFrame, "Hub Configuration", 
+		"Customize your LimeHub experience.\nAdjust performance and safety settings.")
+	
+	ui:createToggle(scrollFrame, "Anti-AFK Enabled", true, function(state)
+		print("Anti-AFK:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Performance Mode", false, function(state)
+		print("Performance Mode:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Hide Player Names", false, function(state)
+		print("Hide Names:", state)
+	end)
+	
+	ui:createToggle(scrollFrame, "Auto Save Settings", true, function(state)
+		print("Auto Save:", state)
+	end)
+	
+	ui:createDropdown(scrollFrame, "UI Theme", 
+		{"Navy Blue (Default)", "Dark Purple", "Midnight Black", "Ocean Blue"}, 
+		"Navy Blue (Default)", 
+		function(selected)
+			print("Theme:", selected)
+		end
+	)
+end)
+
+print("✅ LimeHub UI loaded successfully!")
