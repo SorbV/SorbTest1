@@ -1,0 +1,217 @@
+--==================================================
+-- LIME HUB UI - THANHUB SCALE VERSION
+-- Size match: 650x380 (THANHUB)
+--==================================================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local UI = {}
+UI.__index = UI
+
+--==================================================
+-- CONFIG (THANHUB SIZE)
+--==================================================
+
+local CONFIG = {
+	WINDOW_SIZE = Vector2.new(650, 380),
+	TOPBAR_HEIGHT = 48,
+	SIDEBAR_WIDTH = 190,
+	PADDING = 14,
+	TAB_HEIGHT = 42,
+	CORNER = 16
+}
+
+--==================================================
+-- CREATE WINDOW
+--==================================================
+
+function UI.new(title)
+	local self = setmetatable({}, UI)
+
+	-- ScreenGui
+	local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+	ScreenGui.Name = "LimeHub_UI"
+	ScreenGui.ResetOnSpawn = false
+	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+	-- Main
+	local Main = Instance.new("Frame", ScreenGui)
+	Main.Size = UDim2.fromOffset(CONFIG.WINDOW_SIZE.X, CONFIG.WINDOW_SIZE.Y)
+	Main.Position = UDim2.fromScale(0.5,0.5)
+	Main.AnchorPoint = Vector2.new(0.5,0.5)
+	Main.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Main.BackgroundTransparency = 0.25
+	Main.BorderSizePixel = 0
+	Main.Active = true
+	Instance.new("UICorner",Main).CornerRadius = UDim.new(0,CONFIG.CORNER)
+
+	-- Topbar
+	local Top = Instance.new("Frame", Main)
+	Top.Size = UDim2.new(1,0,0,CONFIG.TOPBAR_HEIGHT)
+	Top.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Top.BackgroundTransparency = 0.35
+	Top.BorderSizePixel = 0
+	Top.Active = true
+	Instance.new("UICorner",Top).CornerRadius = UDim.new(0,CONFIG.CORNER)
+
+	local Title = Instance.new("TextLabel", Top)
+	Title.Size = UDim2.new(1,-20,1,0)
+	Title.Position = UDim2.new(0,20,0,0)
+	Title.BackgroundTransparency = 1
+	Title.Text = title or "LIME HUB"
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 14
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.TextXAlignment = Enum.TextXAlignment.Left
+
+	-- Sidebar
+	local Sidebar = Instance.new("Frame", Main)
+	Sidebar.Size = UDim2.new(0,CONFIG.SIDEBAR_WIDTH,1,-(CONFIG.TOPBAR_HEIGHT+10))
+	Sidebar.Position = UDim2.new(0,10,0,CONFIG.TOPBAR_HEIGHT+10)
+	Sidebar.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	Sidebar.BackgroundTransparency = 0.4
+	Sidebar.BorderSizePixel = 0
+	Instance.new("UICorner",Sidebar).CornerRadius = UDim.new(0,10)
+
+	local SList = Instance.new("UIListLayout", Sidebar)
+	SList.Padding = UDim.new(0,6)
+	SList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+	local SPad = Instance.new("UIPadding", Sidebar)
+	SPad.PaddingTop = UDim.new(0,10)
+
+	-- Content Holder
+	local Content = Instance.new("Frame", Main)
+	Content.Size = UDim2.new(
+		1,-(CONFIG.SIDEBAR_WIDTH+30),
+		1,-(CONFIG.TOPBAR_HEIGHT+20)
+	)
+	Content.Position = UDim2.new(
+		0,CONFIG.SIDEBAR_WIDTH+20,
+		0,CONFIG.TOPBAR_HEIGHT+10
+	)
+	Content.BackgroundTransparency = 1
+
+	--==================================================
+	-- TAB SYSTEM
+	--==================================================
+
+	local CurrentTab
+
+	function self:CreateTab(name)
+		-- Content tab
+		local Tab = Instance.new("ScrollingFrame", Content)
+		Tab.Size = UDim2.new(1,0,1,0)
+		Tab.CanvasSize = UDim2.new(0,0,0,0)
+		Tab.ScrollBarThickness = 6
+		Tab.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		Tab.BackgroundTransparency = 0.35
+		Tab.BorderSizePixel = 0
+		Tab.Visible = false
+		Instance.new("UICorner",Tab).CornerRadius = UDim.new(0,12)
+
+		local Pad = Instance.new("UIPadding", Tab)
+		Pad.PaddingTop = UDim.new(0,18)
+		Pad.PaddingLeft = UDim.new(0,18)
+		Pad.PaddingRight = UDim.new(0,18)
+		Pad.PaddingBottom = UDim.new(0,18)
+
+		local List = Instance.new("UIListLayout", Tab)
+		List.Padding = UDim.new(0,14)
+		List:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+			Tab.CanvasSize = UDim2.new(0,0,0,List.AbsoluteContentSize.Y + 20)
+		end)
+
+		-- Sidebar button
+		local Btn = Instance.new("TextButton", Sidebar)
+		Btn.Size = UDim2.new(1,-16,0,CONFIG.TAB_HEIGHT)
+		Btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		Btn.BackgroundTransparency = 0.45
+		Btn.Text = ""
+		Btn.BorderSizePixel = 0
+		Btn.AutoButtonColor = false
+		Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,8)
+
+		local Label = Instance.new("TextLabel", Btn)
+		Label.Size = UDim2.new(1,-16,1,0)
+		Label.Position = UDim2.new(0,12,0,0)
+		Label.BackgroundTransparency = 1
+		Label.Text = name
+		Label.Font = Enum.Font.GothamBold
+		Label.TextSize = 14
+		Label.TextColor3 = Color3.fromRGB(230,230,230)
+		Label.TextXAlignment = Enum.TextXAlignment.Left
+
+		Btn.MouseButton1Click:Connect(function()
+			if CurrentTab then
+				CurrentTab.Visible = false
+			end
+			Tab.Visible = true
+			CurrentTab = Tab
+		end)
+
+		if not CurrentTab then
+			Tab.Visible = true
+			CurrentTab = Tab
+		end
+
+		return Tab
+	end
+
+	--==================================================
+	-- LABEL METHOD
+	--==================================================
+
+	function self:Label(parent,text,size,bold)
+		local t = Instance.new("TextLabel", parent)
+		t.Size = UDim2.new(1,0,0,size)
+		t.BackgroundTransparency = 1
+		t.TextWrapped = true
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		t.TextYAlignment = Enum.TextYAlignment.Top
+		t.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+		t.TextSize = size
+		t.TextColor3 = Color3.fromRGB(220,230,255)
+		t.Text = text
+		return t
+	end
+
+	--==================================================
+	-- DRAG SYSTEM
+	--==================================================
+
+	local dragging, dragStart, startPos
+	Top.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = i.Position
+			startPos = Main.Position
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = i.Position - dragStart
+			Main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	return self
+end
+
+return UI
