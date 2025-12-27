@@ -1,0 +1,236 @@
+-- LimeHub Modern Glassmorphism UI
+-- UI ONLY (No Game Logic)
+-- By Perdi
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+-- ================= COLORS =================
+local COLORS = {
+	PRIMARY_DARK = Color3.fromRGB(15, 20, 35),
+	PRIMARY = Color3.fromRGB(20, 28, 48),
+	PRIMARY_LIGHT = Color3.fromRGB(28, 38, 62),
+	ACCENT = Color3.fromRGB(88, 140, 220),
+	ACCENT_MUTED = Color3.fromRGB(70, 110, 180),
+	TEXT_PRIMARY = Color3.fromRGB(220, 230, 245),
+	TEXT_SECONDARY = Color3.fromRGB(150, 165, 190),
+	TEXT_MUTED = Color3.fromRGB(100, 115, 145),
+	BORDER = Color3.fromRGB(180, 200, 230),
+	CARD_BG = Color3.fromRGB(32, 42, 68),
+	TOGGLE_OFF = Color3.fromRGB(40, 50, 75),
+	TOGGLE_ON = Color3.fromRGB(70, 110, 180),
+}
+
+-- ================= CONFIG =================
+local CONFIG = {
+	WINDOW_SIZE = Vector2.new(860, 560),
+	CORNER_RADIUS = 18,
+	SIDEBAR_WIDTH = 200,
+	TOPBAR_HEIGHT = 52,
+	PADDING = 18,
+	TAB_HEIGHT = 40,
+	TAB_SPACING = 6,
+	INDICATOR_WIDTH = 3,
+	CARD_CORNER = 12,
+	CARD_PADDING = 16,
+	TOGGLE_WIDTH = 44,
+	TOGGLE_HEIGHT = 22,
+	KNOB_SIZE = 16,
+	WINDOW_TRANSPARENCY = 0.12,
+	SIDEBAR_TRANSPARENCY = 0.18,
+	CARD_TRANSPARENCY = 0.15,
+	BORDER_TRANSPARENCY = 0.78,
+	TWEEN_TIME = 0.3,
+}
+
+-- ================= UTILS =================
+local function tween(i, p, t)
+	TweenService:Create(
+		i,
+		TweenInfo.new(t or CONFIG.TWEEN_TIME, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+		p
+	):Play()
+end
+
+local function corner(i, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r)
+	c.Parent = i
+end
+
+local function stroke(i, t, tr)
+	local s = Instance.new("UIStroke")
+	s.Thickness = t or 1
+	s.Transparency = tr or CONFIG.BORDER_TRANSPARENCY
+	s.Color = COLORS.BORDER
+	s.Parent = i
+end
+
+-- ================= CLASS =================
+local LimeHub = {}
+LimeHub.__index = LimeHub
+
+-- ================= INIT =================
+function LimeHub.new()
+	local self = setmetatable({}, LimeHub)
+	self.Tabs = {}
+	self.CurrentTab = nil
+	self:CreateGui()
+	self:CreateWindow()
+	self:CreateTopbar()
+	self:CreateSidebar()
+	self:CreateContent()
+	return self
+end
+
+function LimeHub:CreateGui()
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LimeHubUI"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Parent = Players.LocalPlayer.PlayerGui
+	self.Gui = gui
+end
+
+function LimeHub:CreateWindow()
+	local main = Instance.new("Frame")
+	main.Size = UDim2.fromOffset(CONFIG.WINDOW_SIZE.X, CONFIG.WINDOW_SIZE.Y)
+	main.Position = UDim2.fromScale(0.5, 0.5)
+	main.AnchorPoint = Vector2.new(0.5, 0.5)
+	main.BackgroundColor3 = COLORS.PRIMARY
+	main.BackgroundTransparency = CONFIG.WINDOW_TRANSPARENCY
+	main.BorderSizePixel = 0
+	main.Parent = self.Gui
+	corner(main, CONFIG.CORNER_RADIUS)
+	stroke(main, 1)
+	self.Main = main
+end
+
+function LimeHub:CreateTopbar()
+	local top = Instance.new("Frame")
+	top.Size = UDim2.new(1, 0, 0, CONFIG.TOPBAR_HEIGHT)
+	top.BackgroundColor3 = COLORS.PRIMARY_LIGHT
+	top.BackgroundTransparency = 0.25
+	top.BorderSizePixel = 0
+	top.Parent = self.Main
+	self.Topbar = top
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -60, 1, 0)
+	title.Position = UDim2.new(0, 20, 0, 0)
+	title.BackgroundTransparency = 1
+	title.Text = "LimeHub"
+	title.TextColor3 = COLORS.TEXT_PRIMARY
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 15
+	title.TextXAlignment = Left
+	title.Parent = top
+end
+
+function LimeHub:CreateSidebar()
+	local side = Instance.new("Frame")
+	side.Size = UDim2.new(0, CONFIG.SIDEBAR_WIDTH, 1, -CONFIG.TOPBAR_HEIGHT)
+	side.Position = UDim2.new(0, 0, 0, CONFIG.TOPBAR_HEIGHT)
+	side.BackgroundColor3 = COLORS.PRIMARY_DARK
+	side.BackgroundTransparency = CONFIG.SIDEBAR_TRANSPARENCY
+	side.BorderSizePixel = 0
+	side.Parent = self.Main
+	self.Sidebar = side
+
+	local list = Instance.new("UIListLayout")
+	list.Padding = UDim.new(0, CONFIG.TAB_SPACING)
+	list.Parent = side
+end
+
+function LimeHub:CreateContent()
+	local content = Instance.new("Frame")
+	content.Position = UDim2.new(0, CONFIG.SIDEBAR_WIDTH, 0, CONFIG.TOPBAR_HEIGHT)
+	content.Size = UDim2.new(1, -CONFIG.SIDEBAR_WIDTH, 1, -CONFIG.TOPBAR_HEIGHT)
+	content.BackgroundTransparency = 1
+	content.Parent = self.Main
+	self.Content = content
+end
+
+-- ================= TAB =================
+function LimeHub:addTab(name, icon, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -12, 0, CONFIG.TAB_HEIGHT)
+	btn.BackgroundTransparency = 1
+	btn.Text = icon .. "  " .. name
+	btn.TextColor3 = COLORS.TEXT_SECONDARY
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 13
+	btn.Parent = self.Sidebar
+
+	btn.MouseButton1Click:Connect(function()
+		if self.CurrentTab then
+			self.CurrentTab.TextColor3 = COLORS.TEXT_SECONDARY
+		end
+		btn.TextColor3 = COLORS.TEXT_PRIMARY
+		self.CurrentTab = btn
+
+		for _, c in ipairs(self.Content:GetChildren()) do
+			c:Destroy()
+		end
+		if callback then
+			callback(self.Content, self)
+		end
+	end)
+end
+
+-- ================= ELEMENTS =================
+function LimeHub:createToggle(parent, text, default, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -20, 0, 42)
+	btn.BackgroundColor3 = COLORS.CARD_BG
+	btn.BackgroundTransparency = CONFIG.CARD_TRANSPARENCY
+	btn.Text = text
+	btn.TextColor3 = COLORS.TEXT_PRIMARY
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 13
+	btn.Parent = parent
+	corner(btn, CONFIG.CARD_CORNER)
+	stroke(btn, 1)
+
+	local state = default
+	btn.MouseButton1Click:Connect(function()
+		state = not state
+		if callback then callback(state) end
+	end)
+end
+
+function LimeHub:createInfoCard(parent, title, text)
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, -20, 0, 120)
+	card.BackgroundColor3 = COLORS.CARD_BG
+	card.BackgroundTransparency = CONFIG.CARD_TRANSPARENCY
+	card.Parent = parent
+	corner(card, CONFIG.CARD_CORNER)
+	stroke(card, 1)
+
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.new(1, -20, 0, 24)
+	t.Position = UDim2.new(0, 10, 0, 10)
+	t.BackgroundTransparency = 1
+	t.Text = title
+	t.Font = Enum.Font.GothamBold
+	t.TextSize = 14
+	t.TextColor3 = COLORS.TEXT_PRIMARY
+	t.Parent = card
+
+	local c = Instance.new("TextLabel")
+	c.Size = UDim2.new(1, -20, 1, -40)
+	c.Position = UDim2.new(0, 10, 0, 40)
+	c.BackgroundTransparency = 1
+	c.TextWrapped = true
+	c.TextYAlignment = Top
+	c.Font = Enum.Font.Gotham
+	c.TextSize = 12
+	c.TextColor3 = COLORS.TEXT_SECONDARY
+	c.Text = text
+	c.Parent = card
+end
+
+-- ================= RETURN =================
+return LimeHub
