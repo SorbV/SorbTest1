@@ -1,0 +1,136 @@
+-- LimeHub UI Core (UI ONLY)
+-- By Perdi
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local UI = {}
+UI.__index = UI
+
+-- ================= CONFIG =================
+UI.COLORS = {
+	PRIMARY = Color3.fromRGB(20, 28, 48),
+	PRIMARY_DARK = Color3.fromRGB(15, 20, 35),
+	PRIMARY_LIGHT = Color3.fromRGB(28, 38, 62),
+	ACCENT = Color3.fromRGB(88, 140, 220),
+	TEXT = Color3.fromRGB(220, 230, 245),
+	MUTED = Color3.fromRGB(150, 165, 190),
+	BORDER = Color3.fromRGB(180, 200, 230),
+}
+
+UI.CONFIG = {
+	WINDOW_SIZE = Vector2.new(860, 560),
+	SIDEBAR_WIDTH = 200,
+	TOPBAR_HEIGHT = 52,
+	TAB_HEIGHT = 40,
+	CORNER = 18,
+	TWEEN = 0.3
+}
+
+-- ================= UTILS =================
+local function tween(i, p, t)
+	TweenService:Create(
+		i,
+		TweenInfo.new(t or UI.CONFIG.TWEEN, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+		p
+	):Play()
+end
+
+local function corner(i, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r)
+	c.Parent = i
+end
+
+-- ================= UI INIT =================
+function UI.new()
+	local self = setmetatable({}, UI)
+	self.Tabs = {}
+	self:CreateGui()
+	self:CreateWindow()
+	self:CreateSidebar()
+	self:CreateContent()
+	return self
+end
+
+function UI:CreateGui()
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LimeHub"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Parent = Players.LocalPlayer.PlayerGui
+	self.Gui = gui
+end
+
+function UI:CreateWindow()
+	local main = Instance.new("Frame")
+	main.Size = UDim2.fromOffset(UI.CONFIG.WINDOW_SIZE.X, UI.CONFIG.WINDOW_SIZE.Y)
+	main.Position = UDim2.fromScale(0.5, 0.5)
+	main.AnchorPoint = Vector2.new(0.5, 0.5)
+	main.BackgroundColor3 = UI.COLORS.PRIMARY
+	main.Parent = self.Gui
+	corner(main, UI.CONFIG.CORNER)
+	self.Main = main
+end
+
+function UI:CreateSidebar()
+	local side = Instance.new("Frame")
+	side.Size = UDim2.new(0, UI.CONFIG.SIDEBAR_WIDTH, 1, 0)
+	side.BackgroundColor3 = UI.COLORS.PRIMARY_DARK
+	side.Parent = self.Main
+	self.Sidebar = side
+
+	local list = Instance.new("UIListLayout")
+	list.Padding = UDim.new(0, 6)
+	list.Parent = side
+end
+
+function UI:CreateContent()
+	local content = Instance.new("Frame")
+	content.Position = UDim2.new(0, UI.CONFIG.SIDEBAR_WIDTH, 0, 0)
+	content.Size = UDim2.new(1, -UI.CONFIG.SIDEBAR_WIDTH, 1, 0)
+	content.BackgroundTransparency = 1
+	content.Parent = self.Main
+	self.Content = content
+end
+
+-- ================= TAB =================
+function UI:AddTab(name, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, UI.CONFIG.TAB_HEIGHT)
+	btn.Text = name
+	btn.TextColor3 = UI.COLORS.MUTED
+	btn.BackgroundTransparency = 1
+	btn.Parent = self.Sidebar
+
+	btn.MouseButton1Click:Connect(function()
+		for _, c in ipairs(self.Content:GetChildren()) do
+			c:Destroy()
+		end
+		if callback then
+			callback(self.Content)
+		end
+	end)
+
+	self.Tabs[name] = btn
+end
+
+-- ================= ELEMENTS =================
+function UI:Toggle(parent, text, default, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -20, 0, 42)
+	btn.Text = text
+	btn.TextColor3 = UI.COLORS.TEXT
+	btn.BackgroundColor3 = UI.COLORS.PRIMARY_LIGHT
+	btn.Parent = parent
+	corner(btn, 10)
+
+	local state = default
+	btn.MouseButton1Click:Connect(function()
+		state = not state
+		if callback then callback(state) end
+	end)
+end
+
+return UI
