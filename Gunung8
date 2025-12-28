@@ -1,0 +1,930 @@
+--[[
+    Sorbhub UI Framework
+    Professional UI Library for Roblox
+    Version: 1.0.0
+    
+    Usage Example:
+    local SorbHub = loadstring(game:HttpGet("your-url"))()
+    local Window = LimeHub:CreateWindow({
+        Title = "My Hub",
+        Subtitle = "v1.0",
+        Size = {780, 520}
+    })
+    
+    local Tab = Window:CreateTab("Home", "🏠")
+    local Section = Tab:CreateSection("Main Features")
+    Section:CreateToggle("Feature Name", false, function(value) end)
+]]
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- Framework
+local sorbHub = {
+    Version = "1.0.0",
+    Instances = {}
+}
+
+-- Theme Configuration
+LimeHub.Theme = {
+    Colors = {
+        Primary = Color3.fromRGB(20, 28, 48),
+        PrimaryDark = Color3.fromRGB(15, 20, 35),
+        PrimaryLight = Color3.fromRGB(28, 38, 62),
+        Secondary = Color3.fromRGB(32, 42, 68),
+        Accent = Color3.fromRGB(88, 140, 220),
+        AccentMuted = Color3.fromRGB(70, 110, 180),
+        TextPrimary = Color3.fromRGB(220, 230, 245),
+        TextSecondary = Color3.fromRGB(150, 165, 190),
+        TextMuted = Color3.fromRGB(100, 115, 145),
+        Border = Color3.fromRGB(180, 200, 230),
+        ToggleOff = Color3.fromRGB(40, 50, 75),
+        ToggleOn = Color3.fromRGB(70, 110, 180),
+    },
+    Sizes = {
+        WindowSize = Vector2.new(780, 520),
+        CornerRadius = 20,
+        SidebarWidth = 180,
+        TopbarHeight = 55,
+        Padding = 20,
+        TabHeight = 42,
+        TabSpacing = 6,
+        IndicatorWidth = 3,
+        CardCorner = 14,
+        CardPadding = 18,
+        ToggleWidth = 42,
+        ToggleHeight = 22,
+        KnobSize = 16,
+        ElementHeight = 50,
+        ElementSpacing = 10,
+    },
+    Transparency = {
+        Window = 0.15,
+        Sidebar = 0.22,
+        Card = 0.18,
+        Border = 0.75,
+    },
+    Animation = {
+        Time = 0.35,
+        Style = Enum.EasingStyle.Sine,
+        Direction = Enum.EasingDirection.Out,
+    }
+}
+
+-- Utility Functions
+local Utility = {}
+
+function Utility:Tween(instance, properties, duration)
+    local info = TweenInfo.new(
+        duration or LimeHub.Theme.Animation.Time,
+        LimeHub.Theme.Animation.Style,
+        LimeHub.Theme.Animation.Direction
+    )
+    local tween = TweenService:Create(instance, info, properties)
+    tween:Play()
+    return tween
+end
+
+function Utility:ApplyCorner(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or LimeHub.Theme.Sizes.CornerRadius)
+    corner.Parent = instance
+    return corner
+end
+
+function Utility:ApplyStroke(instance, thickness, transparency, color)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color or LimeHub.Theme.Colors.Border
+    stroke.Thickness = thickness or 1
+    stroke.Transparency = transparency or LimeHub.Theme.Transparency.Border
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = instance
+    return stroke
+end
+
+function Utility:ApplyPadding(instance, padding)
+    local pad = Instance.new("UIPadding")
+    if type(padding) == "number" then
+        pad.PaddingTop = UDim.new(0, padding)
+        pad.PaddingBottom = UDim.new(0, padding)
+        pad.PaddingLeft = UDim.new(0, padding)
+        pad.PaddingRight = UDim.new(0, padding)
+    else
+        pad.PaddingTop = UDim.new(0, padding.Top or 0)
+        pad.PaddingBottom = UDim.new(0, padding.Bottom or 0)
+        pad.PaddingLeft = UDim.new(0, padding.Left or 0)
+        pad.PaddingRight = UDim.new(0, padding.Right or 0)
+    end
+    pad.Parent = instance
+    return pad
+end
+
+function Utility:ApplyShadow(instance)
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.Size = UDim2.new(1, 40, 1, 40)
+    shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://5554236805"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.7
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+    shadow.ZIndex = instance.ZIndex - 1
+    shadow.Parent = instance
+    return shadow
+end
+
+function Utility:MakeDraggable(frame, dragHandle)
+    local dragging, dragInput, dragStart, startPos
+    dragHandle = dragHandle or frame
+    
+    local function update(input)
+        local delta = input.Position - dragStart
+        local targetPos = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+        Utility:Tween(frame, {Position = targetPos}, 0.05)
+    end
+    
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- Window Class
+local Window = {}
+Window.__index = Window
+
+function sorbHub:CreateWindow(config)
+    local self = setmetatable({}, Window)
+    
+    config = config or {}
+    self.Title = config.Title or "LimeHub"
+    self.Subtitle = config.Subtitle or "UI Framework"
+    self.Size = config.Size or {LimeHub.Theme.Sizes.WindowSize.X, LimeHub.Theme.Sizes.WindowSize.Y}
+    
+    self.Tabs = {}
+    self.CurrentTab = nil
+    
+    self:CreateGui()
+    self:CreateMainFrame()
+    self:CreateTopbar()
+    self:CreateSidebar()
+    self:CreateContentPanel()
+    
+    table.insert(LimeHub.Instances, self)
+    return self
+end
+
+function Window:CreateGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "LimeHubUI_" .. math.random(1000, 9999)
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.IgnoreGuiInset = true
+    
+    local success, err = pcall(function()
+        screenGui.Parent = CoreGui
+    end)
+    
+    if not success then
+        screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+    
+    self.Gui = screenGui
+end
+
+function Window:CreateMainFrame()
+    local main = Instance.new("Frame")
+    main.Name = "MainWindow"
+    main.Size = UDim2.new(0, self.Size[1], 0, self.Size[2])
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
+    main.BackgroundColor3 = LimeHub.Theme.Colors.Primary
+    main.BackgroundTransparency = LimeHub.Theme.Transparency.Window
+    main.BorderSizePixel = 0
+    main.ClipsDescendants = true
+    main.Parent = self.Gui
+    
+    Utility:ApplyCorner(main, LimeHub.Theme.Sizes.CornerRadius)
+    Utility:ApplyStroke(main, 1.2, LimeHub.Theme.Transparency.Border)
+    Utility:ApplyShadow(main)
+    
+    local blurBg = Instance.new("Frame")
+    blurBg.Name = "BlurBackground"
+    blurBg.Size = UDim2.new(1, 0, 1, 0)
+    blurBg.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryDark
+    blurBg.BackgroundTransparency = 0.3
+    blurBg.BorderSizePixel = 0
+    blurBg.ZIndex = main.ZIndex - 1
+    blurBg.Parent = main
+    
+    self.MainFrame = main
+    Utility:MakeDraggable(main)
+end
+
+function Window:CreateTopbar()
+    local topbar = Instance.new("Frame")
+    topbar.Name = "Topbar"
+    topbar.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.TopbarHeight)
+    topbar.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryLight
+    topbar.BackgroundTransparency = 0.25
+    topbar.BorderSizePixel = 0
+    topbar.Parent = self.MainFrame
+    
+    Utility:ApplyCorner(topbar, LimeHub.Theme.Sizes.CornerRadius)
+    
+    local cornerMask = Instance.new("Frame")
+    cornerMask.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.CornerRadius)
+    cornerMask.Position = UDim2.new(0, 0, 1, -LimeHub.Theme.Sizes.CornerRadius)
+    cornerMask.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryLight
+    cornerMask.BackgroundTransparency = 0.25
+    cornerMask.BorderSizePixel = 0
+    cornerMask.Parent = topbar
+    
+    local icon = Instance.new("TextLabel")
+    icon.Size = UDim2.new(0, 30, 0, 30)
+    icon.Position = UDim2.new(0, 18, 0.5, 0)
+    icon.AnchorPoint = Vector2.new(0, 0.5)
+    icon.BackgroundTransparency = 1
+    icon.Text = "🇮🇩"
+    icon.TextSize = 18
+    icon.Font = Enum.Font.Gotham
+    icon.Parent = topbar
+    
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(0, 300, 0, 22)
+    title.Position = UDim2.new(0, 55, 0.5, -7)
+    title.AnchorPoint = Vector2.new(0, 0.5)
+    title.BackgroundTransparency = 1
+    title.Text = self.Title
+    title.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+    title.TextSize = 16
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = topbar
+    
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(0, 300, 0, 16)
+    subtitle.Position = UDim2.new(0, 55, 0.5, 10)
+    subtitle.AnchorPoint = Vector2.new(0, 0.5)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = self.Subtitle
+    subtitle.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+    subtitle.TextSize = 11
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    subtitle.Parent = topbar
+    
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 36, 0, 36)
+    closeBtn.Position = UDim2.new(1, -48, 0.5, 0)
+    closeBtn.AnchorPoint = Vector2.new(0, 0.5)
+    closeBtn.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryLight
+    closeBtn.BackgroundTransparency = 0.4
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+    closeBtn.TextSize = 16
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.AutoButtonColor = false
+    closeBtn.Parent = topbar
+    
+    Utility:ApplyCorner(closeBtn, 10)
+    
+    closeBtn.MouseEnter:Connect(function()
+        Utility:Tween(closeBtn, {
+            BackgroundTransparency = 0.2,
+            TextColor3 = LimeHub.Theme.Colors.TextPrimary
+        }, 0.2)
+    end)
+    
+    closeBtn.MouseLeave:Connect(function()
+        Utility:Tween(closeBtn, {
+            BackgroundTransparency = 0.4,
+            TextColor3 = LimeHub.Theme.Colors.TextSecondary
+        }, 0.2)
+    end)
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        self:Destroy()
+    end)
+    
+    self.Topbar = topbar
+end
+
+function Window:CreateSidebar()
+    local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
+    sidebar.Size = UDim2.new(0, LimeHub.Theme.Sizes.SidebarWidth, 1, -LimeHub.Theme.Sizes.TopbarHeight)
+    sidebar.Position = UDim2.new(0, 0, 0, LimeHub.Theme.Sizes.TopbarHeight)
+    sidebar.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryDark
+    sidebar.BackgroundTransparency = LimeHub.Theme.Transparency.Sidebar
+    sidebar.BorderSizePixel = 0
+    sidebar.Parent = self.MainFrame
+    
+    local separator = Instance.new("Frame")
+    separator.Size = UDim2.new(0, 1, 1, 0)
+    separator.Position = UDim2.new(1, 0, 0, 0)
+    separator.BackgroundColor3 = LimeHub.Theme.Colors.Border
+    separator.BackgroundTransparency = 0.85
+    separator.BorderSizePixel = 0
+    separator.Parent = sidebar
+    
+    local tabContainer = Instance.new("ScrollingFrame")
+    tabContainer.Name = "TabContainer"
+    tabContainer.Size = UDim2.new(1, 0, 1, 0)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.BorderSizePixel = 0
+    tabContainer.ScrollBarThickness = 3
+    tabContainer.ScrollBarImageColor3 = LimeHub.Theme.Colors.TextMuted
+    tabContainer.ScrollBarImageTransparency = 0.6
+    tabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    tabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    tabContainer.Parent = sidebar
+    
+    Utility:ApplyPadding(tabContainer, {Top = 12, Bottom = 12, Left = 10, Right = 10})
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, LimeHub.Theme.Sizes.TabSpacing)
+    listLayout.Parent = tabContainer
+    
+    self.Sidebar = sidebar
+    self.TabContainer = tabContainer
+end
+
+function Window:CreateContentPanel()
+    local content = Instance.new("Frame")
+    content.Name = "ContentPanel"
+    content.Size = UDim2.new(1, -LimeHub.Theme.Sizes.SidebarWidth, 1, -LimeHub.Theme.Sizes.TopbarHeight)
+    content.Position = UDim2.new(0, LimeHub.Theme.Sizes.SidebarWidth, 0, LimeHub.Theme.Sizes.TopbarHeight)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.ClipsDescendants = true
+    content.Parent = self.MainFrame
+    
+    self.ContentPanel = content
+end
+
+function Window:CreateTab(name, icon)
+    local tab = setmetatable({}, {__index = Tab})
+    tab.Window = self
+    tab.Name = name
+    tab.Icon = icon or "📄"
+    tab.Sections = {}
+    
+    tab:CreateButton()
+    tab:CreateContent()
+    
+    table.insert(self.Tabs, tab)
+    
+    if not self.CurrentTab then
+        self:SwitchTab(name)
+    end
+    
+    return tab
+end
+
+function Window:SwitchTab(tabName)
+    for _, tab in ipairs(self.Tabs) do
+        if tab.Name == tabName then
+            if self.CurrentTab then
+                local oldTab = self:GetTab(self.CurrentTab)
+                if oldTab then
+                    oldTab:Deactivate()
+                end
+            end
+            
+            tab:Activate()
+            self.CurrentTab = tabName
+            break
+        end
+    end
+end
+
+function Window:GetTab(tabName)
+    for _, tab in ipairs(self.Tabs) do
+        if tab.Name == tabName then
+            return tab
+        end
+    end
+    return nil
+end
+
+function Window:Destroy()
+    Utility:Tween(self.MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.25)
+    wait(0.25)
+    self.Gui:Destroy()
+end
+
+-- Tab Class
+Tab = {}
+Tab.__index = Tab
+
+function Tab:CreateButton()
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = self.Name
+    tabButton.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.TabHeight)
+    tabButton.BackgroundTransparency = 1
+    tabButton.BorderSizePixel = 0
+    tabButton.Text = ""
+    tabButton.AutoButtonColor = false
+    tabButton.Parent = self.Window.TabContainer
+    
+    local indicator = Instance.new("Frame")
+    indicator.Name = "Indicator"
+    indicator.Size = UDim2.new(0, LimeHub.Theme.Sizes.IndicatorWidth, 0, 0)
+    indicator.Position = UDim2.new(0, 0, 0.5, 0)
+    indicator.AnchorPoint = Vector2.new(0, 0.5)
+    indicator.BackgroundColor3 = LimeHub.Theme.Colors.Accent
+    indicator.BorderSizePixel = 0
+    indicator.Parent = tabButton
+    Utility:ApplyCorner(indicator, 2)
+    
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 24, 0, 24)
+    iconLabel.Position = UDim2.new(0, 14, 0.5, 0)
+    iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = self.Icon
+    iconLabel.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+    iconLabel.TextSize = 16
+    iconLabel.Font = Enum.Font.Gotham
+    iconLabel.Parent = tabButton
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -50, 1, 0)
+    label.Position = UDim2.new(0, 45, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = self.Name
+    label.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamMedium
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = tabButton
+    
+    tabButton.MouseEnter:Connect(function()
+        if self.Window.CurrentTab ~= self.Name then
+            Utility:Tween(iconLabel, {TextColor3 = LimeHub.Theme.Colors.TextPrimary}, 0.2)
+            Utility:Tween(label, {TextColor3 = LimeHub.Theme.Colors.TextPrimary}, 0.2)
+        end
+    end)
+    
+    tabButton.MouseLeave:Connect(function()
+        if self.Window.CurrentTab ~= self.Name then
+            Utility:Tween(iconLabel, {TextColor3 = LimeHub.Theme.Colors.TextSecondary}, 0.2)
+            Utility:Tween(label, {TextColor3 = LimeHub.Theme.Colors.TextSecondary}, 0.2)
+        end
+    end)
+    
+    tabButton.MouseButton1Click:Connect(function()
+        self.Window:SwitchTab(self.Name)
+    end)
+    
+    self.Button = tabButton
+    self.Indicator = indicator
+    self.IconLabel = iconLabel
+    self.Label = label
+end
+
+function Tab:CreateContent()
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Name = self.Name .. "_Content"
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 4
+    scrollFrame.ScrollBarImageColor3 = LimeHub.Theme.Colors.TextMuted
+    scrollFrame.ScrollBarImageTransparency = 0.5
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scrollFrame.Visible = false
+    scrollFrame.Parent = self.Window.ContentPanel
+    
+    Utility:ApplyPadding(scrollFrame, LimeHub.Theme.Sizes.Padding)
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, LimeHub.Theme.Sizes.ElementSpacing)
+    listLayout.Parent = scrollFrame
+    
+    self.Content = scrollFrame
+end
+
+function Tab:Activate()
+    Utility:Tween(self.Indicator, {
+        Size = UDim2.new(0, LimeHub.Theme.Sizes.IndicatorWidth, 0.55, 0)
+    })
+    Utility:Tween(self.IconLabel, {TextColor3 = LimeHub.Theme.Colors.Accent})
+    Utility:Tween(self.Label, {TextColor3 = LimeHub.Theme.Colors.TextPrimary})
+    self.Content.Visible = true
+end
+
+function Tab:Deactivate()
+    Utility:Tween(self.Indicator, {
+        Size = UDim2.new(0, LimeHub.Theme.Sizes.IndicatorWidth, 0, 0)
+    })
+    Utility:Tween(self.IconLabel, {TextColor3 = LimeHub.Theme.Colors.TextSecondary})
+    Utility:Tween(self.Label, {TextColor3 = LimeHub.Theme.Colors.TextSecondary})
+    self.Content.Visible = false
+end
+
+function Tab:CreateSection(title)
+    local section = setmetatable({}, {__index = Section})
+    section.Tab = self
+    section.Title = title
+    section.Elements = {}
+    
+    section:Create()
+    
+    table.insert(self.Sections, section)
+    return section
+end
+
+-- Section Class
+Section = {}
+Section.__index = Section
+
+function Section:Create()
+    local container = Instance.new("Frame")
+    container.Name = "Section_" .. self.Title
+    container.Size = UDim2.new(1, 0, 0, 0)
+    container.AutomaticSize = Enum.AutomaticSize.Y
+    container.BackgroundTransparency = 1
+    container.BorderSizePixel = 0
+    container.Parent = self.Tab.Content
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "SectionTitle"
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = self.Title
+    titleLabel.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+    titleLabel.TextSize = 15
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = container
+    
+    local elementsContainer = Instance.new("Frame")
+    elementsContainer.Name = "Elements"
+    elementsContainer.Size = UDim2.new(1, 0, 0, 0)
+    elementsContainer.Position = UDim2.new(0, 0, 0, 35)
+    elementsContainer.AutomaticSize = Enum.AutomaticSize.Y
+    elementsContainer.BackgroundTransparency = 1
+    elementsContainer.BorderSizePixel = 0
+    elementsContainer.Parent = container
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOr
+	listLayout.Padding = UDim.new(0, 8)
+	listLayout.Parent = elementsContainer
+	
+	self.Container = container
+	self.ElementsContainer = elementsContainer
+end
+
+function Section:CreateToggle(name, default, callback)
+	local toggle = {Value = default or false, Callback = callback or function() end}
+	
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+	container.BackgroundColor3 = LimeHub.Theme.Colors.Secondary
+	container.BackgroundTransparency = LimeHub.Theme.Transparency.Card
+	container.BorderSizePixel = 0
+	container.Parent = self.ElementsContainer
+	Utility:ApplyCorner(container, LimeHub.Theme.Sizes.CardCorner)
+	Utility:ApplyStroke(container, 1, 0.88)
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -70, 1, 0)
+	label.Position = UDim2.new(0, LimeHub.Theme.Sizes.CardPadding, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+	label.TextSize = 13
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = container
+	
+	local toggleBg = Instance.new("Frame")
+	toggleBg.Size = UDim2.new(0, LimeHub.Theme.Sizes.ToggleWidth, 0, LimeHub.Theme.Sizes.ToggleHeight)
+	toggleBg.Position = UDim2.new(1, -LimeHub.Theme.Sizes.ToggleWidth - LimeHub.Theme.Sizes.CardPadding, 0.5, 0)
+	toggleBg.AnchorPoint = Vector2.new(0, 0.5)
+	toggleBg.BackgroundColor3 = toggle.Value and LimeHub.Theme.Colors.ToggleOn or LimeHub.Theme.Colors.ToggleOff
+	toggleBg.BorderSizePixel = 0
+	toggleBg.Parent = container
+	Utility:ApplyCorner(toggleBg, LimeHub.Theme.Sizes.ToggleHeight / 2)
+	
+	local knob = Instance.new("Frame")
+	knob.Size = UDim2.new(0, LimeHub.Theme.Sizes.KnobSize, 0, LimeHub.Theme.Sizes.KnobSize)
+	knob.Position = toggle.Value and 
+		UDim2.new(1, -LimeHub.Theme.Sizes.KnobSize - 3, 0.5, 0) or 
+		UDim2.new(0, 3, 0.5, 0)
+	knob.AnchorPoint = Vector2.new(0, 0.5)
+	knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	knob.BorderSizePixel = 0
+	knob.Parent = toggleBg
+	Utility:ApplyCorner(knob, LimeHub.Theme.Sizes.KnobSize / 2)
+	
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, 0, 1, 0)
+	btn.BackgroundTransparency = 1
+	btn.Text = ""
+	btn.Parent = container
+	
+	btn.MouseButton1Click:Connect(function()
+		toggle.Value = not toggle.Value
+		local targetPos = toggle.Value and 
+			UDim2.new(1, -LimeHub.Theme.Sizes.KnobSize - 3, 0.5, 0) or 
+			UDim2.new(0, 3, 0.5, 0)
+		local targetColor = toggle.Value and LimeHub.Theme.Colors.ToggleOn or LimeHub.Theme.Colors.ToggleOff
+		Utility:Tween(knob, {Position = targetPos}, 0.3)
+		Utility:Tween(toggleBg, {BackgroundColor3 = targetColor}, 0.3)
+		toggle.Callback(toggle.Value)
+	end)
+	
+	return toggle
+end
+
+function Section:CreateDropdown(name, options, default, callback)
+	local dropdown = {Value = default, Options = options, Callback = callback or function() end, Expanded = false}
+	
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+	container.BackgroundColor3 = LimeHub.Theme.Colors.Secondary
+	container.BackgroundTransparency = LimeHub.Theme.Transparency.Card
+	container.BorderSizePixel = 0
+	container.ClipsDescendants = false
+	container.ZIndex = 2
+	container.Parent = self.ElementsContainer
+	Utility:ApplyCorner(container, LimeHub.Theme.Sizes.CardCorner)
+	Utility:ApplyStroke(container, 1, 0.88)
+	
+	local header = Instance.new("TextButton")
+	header.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+	header.BackgroundTransparency = 1
+	header.Text = ""
+	header.Parent = container
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -60, 1, 0)
+	label.Position = UDim2.new(0, LimeHub.Theme.Sizes.CardPadding, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+	label.TextSize = 13
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = header
+	
+	local arrow = Instance.new("TextLabel")
+	arrow.Size = UDim2.new(0, 20, 0, 20)
+	arrow.Position = UDim2.new(1, -LimeHub.Theme.Sizes.CardPadding - 20, 0.5, 0)
+	arrow.AnchorPoint = Vector2.new(0, 0.5)
+	arrow.BackgroundTransparency = 1
+	arrow.Text = "▼"
+	arrow.TextColor3 = LimeHub.Theme.Colors.TextMuted
+	arrow.TextSize = 10
+	arrow.Font = Enum.Font.Gotham
+	arrow.Parent = header
+	
+	local optionsContainer = Instance.new("Frame")
+	optionsContainer.Size = UDim2.new(1, 0, 0, 0)
+	optionsContainer.Position = UDim2.new(0, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+	optionsContainer.BackgroundTransparency = 1
+	optionsContainer.ClipsDescendants = true
+	optionsContainer.ZIndex = 3
+	optionsContainer.Parent = container
+	
+	local optionsList = Instance.new("Frame")
+	optionsList.Size = UDim2.new(1, 0, 1, 0)
+	optionsList.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryDark
+	optionsList.BackgroundTransparency = 0.1
+	optionsList.BorderSizePixel = 0
+	optionsList.Parent = optionsContainer
+	Utility:ApplyCorner(optionsList, LimeHub.Theme.Sizes.CardCorner)
+	Utility:ApplyStroke(optionsList, 1, 0.88)
+	Utility:ApplyPadding(optionsList, 6)
+	
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 4)
+	listLayout.Parent = optionsList
+	
+	for _, option in ipairs(options) do
+		local optionBtn = Instance.new("TextButton")
+		optionBtn.Size = UDim2.new(1, 0, 0, 36)
+		optionBtn.BackgroundColor3 = LimeHub.Theme.Colors.PrimaryLight
+		optionBtn.BackgroundTransparency = 0.5
+		optionBtn.BorderSizePixel = 0
+		optionBtn.Text = option
+		optionBtn.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+		optionBtn.TextSize = 12
+		optionBtn.Font = Enum.Font.Gotham
+		optionBtn.AutoButtonColor = false
+		optionBtn.Parent = optionsList
+		Utility:ApplyCorner(optionBtn, 8)
+		
+		optionBtn.MouseEnter:Connect(function()
+			Utility:Tween(optionBtn, {BackgroundTransparency = 0.2, TextColor3 = LimeHub.Theme.Colors.TextPrimary}, 0.2)
+		end)
+		optionBtn.MouseLeave:Connect(function()
+			Utility:Tween(optionBtn, {BackgroundTransparency = 0.5, TextColor3 = LimeHub.Theme.Colors.TextSecondary}, 0.2)
+		end)
+		optionBtn.MouseButton1Click:Connect(function()
+			dropdown.Value = option
+			dropdown.Callback(option)
+			dropdown.Expanded = false
+			Utility:Tween(optionsContainer, {Size = UDim2.new(1, 0, 0, 0)}, 0.3)
+			Utility:Tween(container, {Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)}, 0.3)
+			Utility:Tween(arrow, {Rotation = 0}, 0.3)
+		end)
+	end
+	
+	header.MouseButton1Click:Connect(function()
+		dropdown.Expanded = not dropdown.Expanded
+		local optionsHeight = #options * 40 + 12
+		local targetOptionsSize = dropdown.Expanded and UDim2.new(1, 0, 0, optionsHeight) or UDim2.new(1, 0, 0, 0)
+		local targetContainerSize = dropdown.Expanded and UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight + optionsHeight) or UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+		Utility:Tween(optionsContainer, {Size = targetOptionsSize}, 0.3)
+		Utility:Tween(container, {Size = targetContainerSize}, 0.3)
+		Utility:Tween(arrow, {Rotation = dropdown.Expanded and 180 or 0}, 0.3)
+	end)
+	
+	return dropdown
+end
+
+function Section:CreateButton(name, callback)
+	local button = {Callback = callback or function() end}
+	
+	local container = Instance.new("TextButton")
+	container.Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)
+	container.BackgroundColor3 = LimeHub.Theme.Colors.Accent
+	container.BackgroundTransparency = 0.3
+	container.BorderSizePixel = 0
+	container.AutoButtonColor = false
+	container.Text = ""
+	container.Parent = self.ElementsContainer
+	Utility:ApplyCorner(container, LimeHub.Theme.Sizes.CardCorner)
+	Utility:ApplyStroke(container, 1, 0.88)
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+	label.TextSize = 14
+	label.Font = Enum.Font.GothamBold
+	label.Parent = container
+	
+	container.MouseEnter:Connect(function()
+		Utility:Tween(container, {BackgroundTransparency = 0.1}, 0.2)
+	end)
+	container.MouseLeave:Connect(function()
+		Utility:Tween(container, {BackgroundTransparency = 0.3}, 0.2)
+	end)
+	container.MouseButton1Click:Connect(function()
+		Utility:Tween(container, {Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight - 4)}, 0.1)
+		wait(0.1)
+		Utility:Tween(container, {Size = UDim2.new(1, 0, 0, LimeHub.Theme.Sizes.ElementHeight)}, 0.1)
+		button.Callback()
+	end)
+	
+	return button
+end
+
+function Section:CreateLabel(text)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 35)
+	container.BackgroundTransparency = 1
+	container.BorderSizePixel = 0
+	container.Parent = self.ElementsContainer
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = LimeHub.Theme.Colors.TextSecondary
+	label.TextSize = 12
+	label.Font = Enum.Font.Gotham
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextWrapped = true
+	label.Parent = container
+	
+	return label
+end
+
+function Section:CreateSelect(name, options, default, callback)
+	local select = {Value = default, Options = options, Callback = callback or function() end}
+	
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(1, 0, 0, 0)
+	container.AutomaticSize = Enum.AutomaticSize.Y
+	container.BackgroundTransparency = 1
+	container.BorderSizePixel = 0
+	container.Parent = self.ElementsContainer
+	
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, 0, 0, 25)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = name
+	titleLabel.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+	titleLabel.TextSize = 13
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.Parent = container
+	
+	local optionsContainer = Instance.new("Frame")
+	optionsContainer.Size = UDim2.new(1, 0, 0, 0)
+	optionsContainer.Position = UDim2.new(0, 0, 0, 30)
+	optionsContainer.AutomaticSize = Enum.AutomaticSize.Y
+	optionsContainer.BackgroundTransparency = 1
+	optionsContainer.BorderSizePixel = 0
+	optionsContainer.Parent = container
+	
+	local gridLayout = Instance.new("UIGridLayout")
+	gridLayout.CellSize = UDim2.new(0, 80, 0, 35)
+	gridLayout.CellPadding = UDim2.new(0, 6, 0, 6)
+	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	gridLayout.Parent = optionsContainer
+	
+	for _, option in ipairs(options) do
+		local optionBtn = Instance.new("TextButton")
+		optionBtn.Size = UDim2.new(0, 80, 0, 35)
+		optionBtn.BackgroundColor3 = select.Value == option and LimeHub.Theme.Colors.Accent or LimeHub.Theme.Colors.Secondary
+		optionBtn.BackgroundTransparency = select.Value == option and 0.3 or 0.5
+		optionBtn.BorderSizePixel = 0
+		optionBtn.Text = option
+		optionBtn.TextColor3 = LimeHub.Theme.Colors.TextPrimary
+		optionBtn.TextSize = 11
+		optionBtn.Font = Enum.Font.Gotham
+		optionBtn.AutoButtonColor = false
+		optionBtn.Parent = optionsContainer
+		Utility:ApplyCorner(optionBtn, 8)
+		Utility:ApplyStroke(optionBtn, 1, 0.88)
+		
+		optionBtn.MouseEnter:Connect(function()
+			if select.Value ~= option then
+				Utility:Tween(optionBtn, {BackgroundTransparency = 0.3}, 0.2)
+			end
+		end)
+		optionBtn.MouseLeave:Connect(function()
+			if select.Value ~= option then
+				Utility:Tween(optionBtn, {BackgroundTransparency = 0.5}, 0.2)
+			end
+		end)
+		optionBtn.MouseButton1Click:Connect(function()
+			for _, child in ipairs(optionsContainer:GetChildren()) do
+				if child:IsA("TextButton") then
+					Utility:Tween(child, {
+						BackgroundColor3 = LimeHub.Theme.Colors.Secondary,
+						BackgroundTransparency = 0.5
+					}, 0.2)
+				end
+			end
+			
+			select.Value = option
+			Utility:Tween(optionBtn, {
+				BackgroundColor3 = LimeHub.Theme.Colors.Accent,
+				BackgroundTransparency = 0.3
+			}, 0.2)
+			select.Callback(option)
+		end)
+	end
+	
+	return select
+end
+
+-- Return Library
+return sorbHub
