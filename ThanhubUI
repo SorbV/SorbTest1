@@ -479,4 +479,205 @@ function Library:CreateWindow(title)
                         OptionButton.TextSize = 12
                         OptionButton.Font = Enum.Font.Gotham
                         OptionButton.TextXAlignment = Enum.TextXAlignment.Left
-                        OptionBut
+                        OptionButton.Parent = DropdownList
+                        
+                        OptionButton.MouseEnter:Connect(function()
+                            OptionButton.BackgroundTransparency = 0
+                            TweenColor(OptionButton, "BackgroundColor3", Colors.Panel)
+                        end)
+                        
+                        OptionButton.MouseLeave:Connect(function()
+                            OptionButton.BackgroundTransparency = 1
+                        end)
+                        
+                        OptionButton.MouseButton1Click:Connect(function()
+                            currentSelection = option
+                            DropdownButton.Text = "  " .. option
+                            
+                            isOpen = false
+                            Arrow.Text = "▼"
+                            TweenSize(DropdownList, UDim2.new(1, 0, 0, 0))
+                            TweenSize(DropdownFrame, UDim2.new(1, 0, 0, 75))
+                            task.wait(0.3)
+                            DropdownList.Visible = false
+                            
+                            callback(option)
+                        end)
+                    end
+
+                    DropdownButton.MouseButton1Click:Connect(function()
+                        isOpen = not isOpen
+                        
+                        if isOpen then
+                            DropdownList.Visible = true
+                            Arrow.Text = "▲"
+                            local listSize = #options * 30
+                            TweenSize(DropdownList, UDim2.new(1, 0, 0, listSize))
+                            TweenSize(DropdownFrame, UDim2.new(1, 0, 0, 75 + listSize + 10))
+                        else
+                            Arrow.Text = "▼"
+                            TweenSize(DropdownList, UDim2.new(1, 0, 0, 0))
+                            TweenSize(DropdownFrame, UDim2.new(1, 0, 0, 75))
+                            task.wait(0.3)
+                            DropdownList.Visible = false
+                        end
+                    end)
+                    
+                    return {
+                        SetValue = function(value)
+                            currentSelection = value
+                            DropdownButton.Text = "  " .. value
+                        end
+                    }
+                end
+
+                function Panel:CreateInput(name, default, callback)
+                    callback = callback or function() end
+                    
+                    local InputFrame = Instance.new("Frame")
+                    InputFrame.Name = name
+                    InputFrame.Size = UDim2.new(1, 0, 0, 65)
+                    InputFrame.BackgroundTransparency = 1
+                    InputFrame.Parent = PanelFrame
+                    
+                    local InputLabel = Instance.new("TextLabel")
+                    InputLabel.Name = "Label"
+                    InputLabel.Size = UDim2.new(1, 0, 0, 20)
+                    InputLabel.BackgroundTransparency = 1
+                    InputLabel.Text = name
+                    InputLabel.TextColor3 = Colors.TextDim
+                    InputLabel.TextSize = 13
+                    InputLabel.Font = Enum.Font.Gotham
+                    InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    InputLabel.Parent = InputFrame
+                    
+                    local InputBox = Instance.new("TextBox")
+                    InputBox.Name = "Input"
+                    InputBox.Size = UDim2.new(1, 0, 0, 35)
+                    InputBox.Position = UDim2.new(0, 0, 0, 30)
+                    InputBox.BackgroundColor3 = Colors.DarkPanel
+                    InputBox.BorderSizePixel = 0
+                    InputBox.Text = tostring(default or "")
+                    InputBox.PlaceholderText = "Enter value..."
+                    InputBox.TextColor3 = Colors.Text
+                    InputBox.PlaceholderColor3 = Colors.TextDim
+                    InputBox.TextSize = 12
+                    InputBox.Font = Enum.Font.Gotham
+                    InputBox.ClearTextOnFocus = false
+                    InputBox.Parent = InputFrame
+                    CreateUICorner(InputBox, 6)
+                    CreateUIStroke(InputBox, Colors.Border, 1)
+                    
+                    local InputPadding = Instance.new("UIPadding")
+                    InputPadding.PaddingLeft = UDim.new(0, 10)
+                    InputPadding.PaddingRight = UDim.new(0, 10)
+                    InputPadding.Parent = InputBox
+                    
+                    InputBox.FocusLost:Connect(function(enterPressed)
+                        if enterPressed then
+                            callback(InputBox.Text)
+                        end
+                    end)
+                    
+                    return {
+                        SetValue = function(value)
+                            InputBox.Text = tostring(value)
+                        end,
+                        GetValue = function()
+                            return InputBox.Text
+                        end
+                    }
+                end
+                
+                function Panel:CreateLabel(text)
+                    local Label = Instance.new("TextLabel")
+                    Label.Name = "InfoLabel"
+                    Label.Size = UDim2.new(1, 0, 0, 30)
+                    Label.BackgroundColor3 = Colors.DarkPanel
+                    Label.BorderSizePixel = 0
+                    Label.Text = text
+                    Label.TextColor3 = Colors.TextDim
+                    Label.TextSize = 12
+                    Label.Font = Enum.Font.Gotham
+                    Label.TextWrapped = true
+                    Label.TextXAlignment = Enum.TextXAlignment.Left
+                    Label.AutomaticSize = Enum.AutomaticSize.Y
+                    Label.Parent = PanelFrame
+                    CreateUICorner(Label, 6)
+                    
+                    local LabelPadding = Instance.new("UIPadding")
+                    LabelPadding.PaddingTop = UDim.new(0, 8)
+                    LabelPadding.PaddingBottom = UDim.new(0, 8)
+                    LabelPadding.PaddingLeft = UDim.new(0, 10)
+                    LabelPadding.PaddingRight = UDim.new(0, 10)
+                    LabelPadding.Parent = Label
+                    
+                    return {
+                        SetText = function(newText)
+                            Label.Text = newText
+                        end
+                    }
+                end
+                
+                function Panel:CreateButton(text, callback)
+                    callback = callback or function() end
+                    
+                    local Button = Instance.new("TextButton")
+                    Button.Name = "Button"
+                    Button.Size = UDim2.new(1, 0, 0, 35)
+                    Button.BackgroundColor3 = Colors.Accent
+                    Button.BorderSizePixel = 0
+                    Button.Text = text
+                    Button.TextColor3 = Colors.Text
+                    Button.TextSize = 13
+                    Button.Font = Enum.Font.GothamBold
+                    Button.Parent = PanelFrame
+                    CreateUICorner(Button, 8)
+                    
+                    local ButtonGlow = CreateGlow(Button, Colors.Glow)
+                    ButtonGlow.ImageTransparency = 0.7
+                    
+                    Button.MouseEnter:Connect(function()
+                        TweenColor(Button, "BackgroundColor3", Colors.AccentDark)
+                        TweenService:Create(ButtonGlow, TWEEN_INFO, {ImageTransparency = 0.3}):Play()
+
+end)
+                    
+                    Button.MouseLeave:Connect(function()
+                        TweenColor(Button, "BackgroundColor3", Colors.Accent)
+                        TweenService:Create(ButtonGlow, TWEEN_INFO, {ImageTransparency = 0.7}):Play()
+                    end)
+                    
+                    Button.MouseButton1Click:Connect(function()
+                        callback()
+                    end)
+                    
+                    return {
+                        SetText = function(newText)
+                            Button.Text = newText
+                        end
+                    }
+                end
+                
+                table.insert(Column.Panels, Panel)
+                return Panel
+            end
+
+            table.insert(Tab.Columns, Column)
+            return Column
+        end
+        
+        table.insert(Window.Tabs, Tab)
+        
+        -- Auto activate first tab
+        if #Window.Tabs == 1 then
+            Tab:Activate()
+        end
+        
+        return Tab
+    end
+    
+    return Window
+end
+
+return Library
