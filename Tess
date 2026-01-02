@@ -1,0 +1,630 @@
+--==================================================
+-- SPEEDHUB FULL UI
+-- PART 1 : CORE + WINDOW
+--==================================================
+
+--// Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+--// Player
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+--// Remove old
+pcall(function()
+	if PlayerGui:FindFirstChild("SpeedHub_Full") then
+		PlayerGui.SpeedHub_Full:Destroy()
+	end
+end)
+
+--// ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpeedHub_Full"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+
+--// Main Window
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.fromScale(0.78, 0.8)
+Main.Position = UDim2.fromScale(0.5, 0.5)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundColor3 = Color3.fromRGB(10, 15, 25)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
+
+--// Stroke (Glow Base)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(0, 170, 255)
+MainStroke.Thickness = 1.2
+MainStroke.Transparency = 0.55
+
+--// Gradient Background
+local MainGradient = Instance.new("UIGradient", Main)
+MainGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 18, 32)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(6, 10, 20))
+})
+
+--// Shadow
+local Shadow = Instance.new("ImageLabel")
+Shadow.Parent = Main
+Shadow.Image = "rbxassetid://1316045217"
+Shadow.Size = UDim2.new(1, 60, 1, 60)
+Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+Shadow.BackgroundTransparency = 1
+Shadow.ImageTransparency = 0.65
+Shadow.ZIndex = -1
+
+--// Theme Table (GLOBAL)
+_G.SpeedHubTheme = {
+	Accent = Color3.fromRGB(0, 170, 255),
+	Text = Color3.fromRGB(220, 220, 220),
+	SubText = Color3.fromRGB(150, 150, 150),
+	Background = Color3.fromRGB(10, 15, 25),
+	Panel = Color3.fromRGB(14, 20, 34)
+}
+
+--// Animation helper
+local function Tween(obj, info, props)
+	local t = TweenService:Create(obj, info, props)
+	t:Play()
+	return t
+end
+
+--// Blur
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 18
+Blur.Enabled = true
+Blur.Parent = Lighting
+
+--// Drag System
+do
+	local dragging, dragStart, startPos
+
+	Main.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			Main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
+
+print("SpeedHub PART 1 loaded")
+
+--==================================================
+-- SPEEDHUB FULL UI
+-- PART 2 : SIDEBAR + TAB SYSTEM
+--==================================================
+
+--// Sidebar
+local Sidebar = Instance.new("Frame")
+Sidebar.Parent = Main
+Sidebar.Size = UDim2.new(0, 220, 1, 0)
+Sidebar.Position = UDim2.new(0, 0, 0, 0)
+Sidebar.BackgroundColor3 = _G.SpeedHubTheme.Panel
+Sidebar.BorderSizePixel = 0
+
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 16)
+
+local SideGradient = Instance.new("UIGradient", Sidebar)
+SideGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 25, 45)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 15, 30))
+})
+
+--// Sidebar Title
+local SideTitle = Instance.new("TextLabel")
+SideTitle.Parent = Sidebar
+SideTitle.Size = UDim2.new(1, -20, 0, 50)
+SideTitle.Position = UDim2.new(0, 10, 0, 10)
+SideTitle.BackgroundTransparency = 1
+SideTitle.Text = "⚓ SPEEDHUB"
+SideTitle.Font = Enum.Font.GothamBold
+SideTitle.TextSize = 18
+SideTitle.TextColor3 = _G.SpeedHubTheme.Accent
+SideTitle.TextXAlignment = Left
+
+--// Button Holder
+local ButtonHolder = Instance.new("Frame")
+ButtonHolder.Parent = Sidebar
+ButtonHolder.Size = UDim2.new(1, 0, 1, -80)
+ButtonHolder.Position = UDim2.new(0, 0, 0, 70)
+ButtonHolder.BackgroundTransparency = 1
+
+local UIList = Instance.new("UIListLayout", ButtonHolder)
+UIList.Padding = UDim.new(0, 6)
+
+--// Content Holder
+local ContentHolder = Instance.new("Frame")
+ContentHolder.Parent = Main
+ContentHolder.Size = UDim2.new(1, -240, 1, -30)
+ContentHolder.Position = UDim2.new(0, 230, 0, 15)
+ContentHolder.BackgroundTransparency = 1
+
+--// Tab System Tables
+local Tabs = {}
+local ActiveTab = nil
+
+--// Create Tab Function
+local function CreateTab(tabName, icon)
+	-- Button
+	local Btn = Instance.new("TextButton")
+	Btn.Parent = ButtonHolder
+	Btn.Size = UDim2.new(1, -20, 0, 40)
+	Btn.BackgroundColor3 = Color3.fromRGB(14, 20, 36)
+	Btn.Text = "   "..(icon or "•").."  "..tabName
+	Btn.Font = Enum.Font.Gotham
+	Btn.TextSize = 14
+	Btn.TextColor3 = _G.SpeedHubTheme.Text
+	Btn.TextXAlignment = Left
+	Btn.BorderSizePixel = 0
+	Btn.AutoButtonColor = false
+	Btn.BackgroundTransparency = 0.1
+	Btn.LayoutOrder = #Tabs + 1
+
+	Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
+
+	local Stroke = Instance.new("UIStroke", Btn)
+	Stroke.Transparency = 1
+
+	-- Content Frame
+	local Page = Instance.new("Frame")
+	Page.Parent = ContentHolder
+	Page.Size = UDim2.new(1, 0, 1, 0)
+	Page.BackgroundTransparency = 1
+	Page.Visible = false
+
+	-- Tab Logic
+	Btn.MouseButton1Click:Connect(function()
+		if ActiveTab == Page then return end
+
+		if ActiveTab then
+			ActiveTab.Visible = false
+		end
+
+		for _, v in pairs(ButtonHolder:GetChildren()) do
+			if v:IsA("TextButton") then
+				Tween(v, TweenInfo.new(0.2), {
+					BackgroundColor3 = Color3.fromRGB(14, 20, 36),
+					TextColor3 = _G.SpeedHubTheme.Text
+				})
+			end
+		end
+
+		Page.Visible = true
+		ActiveTab = Page
+
+		Tween(Btn, TweenInfo.new(0.25), {
+			BackgroundColor3 = Color3.fromRGB(18, 30, 55),
+			TextColor3 = _G.SpeedHubTheme.Accent
+		})
+
+		Stroke.Transparency = 0.4
+	end)
+
+	table.insert(Tabs, {Button = Btn, Page = Page})
+	return Page
+end
+
+--// Example Tabs
+local FishingTab = CreateTab("Fishing", "🎣")
+local TeleportTab = CreateTab("Teleport", "📍")
+local SettingTab = CreateTab("Settings", "⚙")
+
+--// Default Open
+task.delay(0.1, function()
+	Tabs[1].Button:Fire("MouseButton1Click")
+end)
+
+--==================================================
+-- SPEEDHUB FULL UI
+-- PART 3 : COMPONENT SYSTEM
+--==================================================
+
+--// Utils
+local function Create(class, props, parent)
+	local obj = Instance.new(class)
+	for i,v in pairs(props) do
+		obj[i] = v
+	end
+	if parent then obj.Parent = parent end
+	return obj
+end
+
+--// Section Creator
+function CreateSection(parent, title)
+	local Holder = Create("Frame", {
+		Size = UDim2.new(1, -10, 0, 40),
+		BackgroundTransparency = 1,
+	}, parent)
+
+	local Title = Create("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+		Text = title,
+		Font = Enum.Font.GothamBold,
+		TextSize = 15,
+		TextColor3 = _G.SpeedHubTheme.Accent,
+		TextXAlignment = Left
+	}, Holder)
+
+	local Layout = Create("UIListLayout", {
+		Padding = UDim.new(0, 8)
+	}, Holder)
+
+	return Holder
+end
+
+--// Toggle
+function CreateToggle(parent, text, callback)
+	local Toggle = Create("Frame", {
+		Size = UDim2.new(1, 0, 0, 38),
+		BackgroundColor3 = Color3.fromRGB(16, 22, 40),
+	}, parent)
+	Create("UICorner", {CornerRadius = UDim.new(0,10)}, Toggle)
+
+	local Label = Create("TextLabel", {
+		Size = UDim2.new(1, -60, 1, 0),
+		Position = UDim2.new(0, 12, 0, 0),
+		BackgroundTransparency = 1,
+		Text = text,
+		Font = Enum.Font.Gotham,
+		TextSize = 14,
+		TextColor3 = _G.SpeedHubTheme.Text,
+		TextXAlignment = Left
+	}, Toggle)
+
+	local Button = Create("TextButton", {
+		Size = UDim2.new(0, 36, 0, 18),
+		Position = UDim2.new(1, -50, 0.5, -9),
+		Text = "",
+		BackgroundColor3 = Color3.fromRGB(60,60,60),
+	}, Toggle)
+	Create("UICorner", {CornerRadius = UDim.new(1,0)}, Button)
+
+	local Circle = Create("Frame", {
+		Size = UDim2.new(0, 14, 0, 14),
+		Position = UDim2.new(0, 2, 0.5, -7),
+		BackgroundColor3 = Color3.fromRGB(200,200,200),
+	}, Button)
+	Create("UICorner", {CornerRadius = UDim.new(1,0)}, Circle)
+
+	local State = false
+	Button.MouseButton1Click:Connect(function()
+		State = not State
+		Tween(Button, TweenInfo.new(0.2), {
+			BackgroundColor3 = State and _G.SpeedHubTheme.Accent or Color3.fromRGB(60,60,60)
+		})
+		Tween(Circle, TweenInfo.new(0.2), {
+			Position = State and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)
+		})
+		pcall(callback, State)
+	end)
+end
+
+--// Button
+function CreateButton(parent, text, callback)
+	local Btn = Create("TextButton", {
+		Size = UDim2.new(1, 0, 0, 38),
+		BackgroundColor3 = Color3.fromRGB(18, 28, 55),
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 14,
+		TextColor3 = Color3.new(1,1,1),
+	}, parent)
+	Create("UICorner", {CornerRadius = UDim.new(0,10)}, Btn)
+
+	Btn.MouseButton1Click:Connect(function()
+		Tween(Btn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3})
+		task.wait(0.1)
+		Tween(Btn, TweenInfo.new(0.15), {BackgroundTransparency = 0})
+		pcall(callback)
+	end)
+end
+
+--// Scroll Page Helper
+function MakeScrollable(page)
+	local Scroll = Create("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		CanvasSize = UDim2.new(0,0,0,0),
+		ScrollBarImageTransparency = 1,
+		BackgroundTransparency = 1,
+	}, page)
+
+	local Layout = Create("UIListLayout", {
+		Padding = UDim.new(0, 10)
+	}, Scroll)
+
+	Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		Scroll.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 20)
+	end)
+
+	return Scroll
+end
+
+--==================================================
+-- EXAMPLE USE (REAL TEST)
+--==================================================
+
+local FishScroll = MakeScrollable(FishingTab)
+
+local FishSection = CreateSection(FishScroll, "Fishing Feature")
+CreateToggle(FishSection, "Auto Fish", function(v)
+	print("Auto Fish:", v)
+end)
+
+CreateToggle(FishSection, "Perfect Cast", function(v)
+	print("Perfect Cast:", v)
+end)
+
+CreateButton(FishSection, "Sell All Fish", function()
+	print("Sell Fish")
+end)
+
+--==================================================
+-- SPEEDHUB FULL UI
+-- PART 4 : ADVANCED COMPONENTS
+--==================================================
+
+--// Slider
+function CreateSlider(parent, text, min, max, default, callback)
+	local Holder = Create("Frame", {
+		Size = UDim2.new(1, 0, 0, 52),
+		BackgroundColor3 = Color3.fromRGB(16, 22, 40),
+	}, parent)
+	Create("UICorner", {CornerRadius = UDim.new(0,10)}, Holder)
+
+	Create("TextLabel", {
+		Size = UDim2.new(1, -20, 0, 20),
+		Position = UDim2.new(0, 10, 0, 5),
+		BackgroundTransparency = 1,
+		Text = text,
+		Font = Enum.Font.Gotham,
+		TextSize = 13,
+		TextColor3 = _G.SpeedHubTheme.Text,
+		TextXAlignment = Left
+	}, Holder)
+
+	local ValueLabel = Create("TextLabel", {
+		Size = UDim2.new(0, 50, 0, 20),
+		Position = UDim2.new(1, -60, 0, 5),
+		BackgroundTransparency = 1,
+		Text = tostring(default),
+		Font = Enum.Font.GothamBold,
+		TextSize = 13,
+		TextColor3 = _G.SpeedHubTheme.Accent,
+		TextXAlignment = Right
+	}, Holder)
+
+	local Bar = Create("Frame", {
+		Size = UDim2.new(1, -20, 0, 6),
+		Position = UDim2.new(0, 10, 0, 34),
+		BackgroundColor3 = Color3.fromRGB(60,60,60),
+	}, Holder)
+	Create("UICorner", {CornerRadius = UDim.new(1,0)}, Bar)
+
+	local Fill = Create("Frame", {
+		Size = UDim2.new((default-min)/(max-min), 0, 1, 0),
+		BackgroundColor3 = _G.SpeedHubTheme.Accent,
+	}, Bar)
+	Create("UICorner", {CornerRadius = UDim.new(1,0)}, Fill)
+
+	local Dragging = false
+	Bar.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = true end
+	end)
+	UserInputService.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = false end
+	end)
+	UserInputService.InputChanged:Connect(function(i)
+		if Dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local pct = math.clamp((i.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+			local val = math.floor(min + (max-min) * pct)
+			Fill.Size = UDim2.new(pct,0,1,0)
+			ValueLabel.Text = val
+			pcall(callback, val)
+		end
+	end)
+end
+
+--// Dropdown
+function CreateDropdown(parent, text, list, callback)
+	local Open = false
+
+	local Holder = Create("Frame", {
+		Size = UDim2.new(1, 0, 0, 38),
+		BackgroundColor3 = Color3.fromRGB(16, 22, 40),
+	}, parent)
+	Create("UICorner", {CornerRadius = UDim.new(0,10)}, Holder)
+
+	local Label = Create("TextLabel", {
+		Size = UDim2.new(1, -30, 1, 0),
+		Position = UDim2.new(0, 12, 0, 0),
+		BackgroundTransparency = 1,
+		Text = text,
+		Font = Enum.Font.Gotham,
+		TextSize = 14,
+		TextColor3 = _G.SpeedHubTheme.Text,
+		TextXAlignment = Left
+	}, Holder)
+
+	local ListFrame = Create("Frame", {
+		Size = UDim2.new(1, 0, 0, 0),
+		Position = UDim2.new(0, 0, 1, 5),
+		BackgroundColor3 = Color3.fromRGB(14,18,35),
+		ClipsDescendants = true,
+	}, Holder)
+	Create("UICorner", {CornerRadius = UDim.new(0,10)}, ListFrame)
+
+	local Layout = Create("UIListLayout",{Padding=UDim.new(0,6)},ListFrame)
+
+	for _,v in pairs(list) do
+		local Opt = Create("TextButton", {
+			Size = UDim2.new(1, -10, 0, 32),
+			BackgroundColor3 = Color3.fromRGB(18,25,50),
+			Text = v,
+			Font = Enum.Font.Gotham,
+			TextSize = 13,
+			TextColor3 = Color3.new(1,1,1),
+		}, ListFrame)
+		Create("UICorner",{CornerRadius=UDim.new(0,8)},Opt)
+
+		Opt.MouseButton1Click:Connect(function()
+			Label.Text = text.." : "..v
+			Open = false
+			Tween(ListFrame,TweenInfo.new(0.2),{Size=UDim2.new(1,0,0,0)})
+			pcall(callback,v)
+		end)
+	end
+
+	Holder.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			Open = not Open
+			Tween(ListFrame,TweenInfo.new(0.25),{
+				Size = Open and UDim2.new(1,0,0,Layout.AbsoluteContentSize.Y+10) or UDim2.new(1,0,0,0)
+			})
+		end
+	end)
+end
+
+--// Notification
+function Notify(text)
+	local N = Create("TextLabel", {
+		Size = UDim2.new(0, 0, 0, 40),
+		Position = UDim2.new(0.5, 0, 0.05, 0),
+		AnchorPoint = Vector2.new(0.5,0),
+		BackgroundColor3 = _G.SpeedHubTheme.Accent,
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 14,
+		TextColor3 = Color3.new(1,1,1),
+	}, ScreenGui)
+	Create("UICorner",{CornerRadius=UDim.new(0,10)},N)
+
+	Tween(N,TweenInfo.new(0.3),{Size=UDim2.new(0,300,0,40)})
+	task.wait(2)
+	Tween(N,TweenInfo.new(0.3),{Size=UDim2.new(0,0,0,40)})
+	task.delay(0.4,function() N:Destroy() end)
+end
+
+--==================================================
+-- EXAMPLE ADVANCED USE
+--==================================================
+
+local SettingScroll = MakeScrollable(SettingsTab)
+
+CreateSlider(SettingScroll,"WalkSpeed",16,200,16,function(v)
+	game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+end)
+
+CreateDropdown(SettingScroll,"Select Mode",{
+	"Legit","Semi","Rage"
+},function(v)
+	Notify("Mode : "..v)
+end)
+
+--==================================================
+-- SPEEDHUB FULL UI
+-- PART 5 : CONFIG SAVE / LOAD
+--==================================================
+
+local HttpService = game:GetService("HttpService")
+local FolderName = "SpeedHub"
+local ConfigFile = FolderName.."/config.json"
+
+-- table config utama
+_G.SpeedHubConfig = _G.SpeedHubConfig or {
+	WalkSpeed = 16,
+	Mode = "Legit"
+}
+
+--// ensure folder
+if not isfolder(FolderName) then
+	makefolder(FolderName)
+end
+
+--// SAVE CONFIG
+function SaveConfig()
+	if not writefile then return end
+	local data = HttpService:JSONEncode(_G.SpeedHubConfig)
+	writefile(ConfigFile, data)
+end
+
+--// LOAD CONFIG
+function LoadConfig()
+	if not isfile(ConfigFile) then return end
+	local data = readfile(ConfigFile)
+	local success, decoded = pcall(function()
+		return HttpService:JSONDecode(data)
+	end)
+	if success and decoded then
+		for k,v in pairs(decoded) do
+			_G.SpeedHubConfig[k] = v
+		end
+	end
+end
+
+-- auto load saat start
+LoadConfig()
+
+--==================================================
+-- APPLY CONFIG KE GAME
+--==================================================
+
+local plr = game.Players.LocalPlayer
+plr.CharacterAdded:Connect(function(char)
+	task.wait(1)
+	if char:FindFirstChild("Humanoid") then
+		char.Humanoid.WalkSpeed = _G.SpeedHubConfig.WalkSpeed
+	end
+end)
+
+--==================================================
+-- REPLACE CALLBACK (HOOK)
+--==================================================
+
+-- WalkSpeed slider hook
+CreateSlider(SettingScroll,"WalkSpeed",16,200,_G.SpeedHubConfig.WalkSpeed,function(v)
+	_G.SpeedHubConfig.WalkSpeed = v
+	SaveConfig()
+	if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+		plr.Character.Humanoid.WalkSpeed = v
+	end
+end)
+
+-- Mode dropdown hook
+CreateDropdown(SettingScroll,"Select Mode",{
+	"Legit","Semi","Rage"
+},function(v)
+	_G.SpeedHubConfig.Mode = v
+	SaveConfig()
+	Notify("Mode : "..v)
+end)
