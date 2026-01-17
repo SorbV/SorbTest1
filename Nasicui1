@@ -1,0 +1,654 @@
+-- 99-V3 PREMIUM UI V2 | BY NASZX❤🤭
+-- LEBIH BAGUS DARI LINK LU, ANJING!
+-- CHANNEL: https://whatsapp.com/channel/0029VbCHHlkE50Udyn5xDw0g
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- CREATE MAIN SCREEN GUI
+local PremiumUI = Instance.new("ScreenGui")
+PremiumUI.Name = "PremiumUI_99V3"
+PremiumUI.DisplayOrder = 999
+PremiumUI.ResetOnSpawn = false
+PremiumUI.Parent = playerGui
+
+-- BACKGROUND BLUR
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 15
+Blur.Parent = game:GetService("Lighting")
+
+-- MAIN CONTAINER
+local MainContainer = Instance.new("Frame")
+MainContainer.Name = "MainContainer"
+MainContainer.Size = UDim2.new(0.85, 0, 0.8, 0)
+MainContainer.Position = UDim2.new(0.075, 0, 0.1, 0)
+MainContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainContainer.BackgroundTransparency = 0.1
+MainContainer.ClipsDescendants = true
+
+-- ROUNDED CORNERS
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.02, 0)
+UICorner.Parent = MainContainer
+
+-- SHADOW EFFECT
+local Shadow = Instance.new("ImageLabel")
+Shadow.Name = "Shadow"
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://5554237735"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.7
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(23,23,277,277)
+Shadow.Parent = MainContainer
+
+-- TOP BAR
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0.06, 0)
+TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+TopBar.BorderSizePixel = 0
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 0)
+TopBarCorner.Parent = TopBar
+
+-- TOP BAR GRADIENT
+local TopBarGradient = Instance.new("UIGradient")
+TopBarGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 80, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 30))
+})
+TopBarGradient.Rotation = 0
+TopBarGradient.Parent = TopBar
+
+-- LOGO
+local Logo = Instance.new("TextLabel")
+Logo.Name = "Logo"
+Logo.Size = UDim2.new(0.3, 0, 1, 0)
+Logo.BackgroundTransparency = 1
+Logo.Text = "⚡ 99-V3 PREMIUM"
+Logo.TextColor3 = Color3.fromRGB(255, 255, 255)
+Logo.TextScaled = true
+Logo.Font = Enum.Font.GothamBlack
+Logo.TextXAlignment = Enum.TextXAlignment.Left
+Logo.PaddingLeft = UDim.new(0.05, 0)
+
+-- CLOSE BUTTON
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0.05, 0, 0.7, 0)
+CloseButton.Position = UDim2.new(0.93, 0, 0.15, 0)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+CloseButton.Text = "✕"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextScaled = true
+CloseButton.Font = Enum.Font.GothamBold
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0.3, 0)
+CloseCorner.Parent = CloseButton
+
+-- MINIMIZE BUTTON
+local MinButton = Instance.new("TextButton")
+MinButton.Name = "MinButton"
+MinButton.Size = UDim2.new(0.05, 0, 0.7, 0)
+MinButton.Position = UDim2.new(0.87, 0, 0.15, 0)
+MinButton.BackgroundColor3 = Color3.fromRGB(255, 180, 60)
+MinButton.Text = "─"
+MinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinButton.TextScaled = true
+MinButton.Font = Enum.Font.GothamBold
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0.3, 0)
+MinCorner.Parent = MinButton
+
+-- SIDEBAR (LEFT)
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0.18, 0, 0.94, 0)
+Sidebar.Position = UDim2.new(0, 0, 0.06, 0)
+Sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+Sidebar.BorderSizePixel = 0
+
+-- USER PROFILE
+local UserProfile = Instance.new("Frame")
+UserProfile.Name = "UserProfile"
+UserProfile.Size = UDim2.new(1, 0, 0.15, 0)
+UserProfile.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+
+local ProfileCorner = Instance.new("UICorner")
+ProfileCorner.CornerRadius = UDim.new(0, 0)
+ProfileCorner.Parent = UserProfile
+
+-- AVATAR
+local Avatar = Instance.new("ImageLabel")
+Avatar.Name = "Avatar"
+Avatar.Size = UDim2.new(0.5, 0, 0.7, 0)
+Avatar.Position = UDim2.new(0.25, 0, 0.15, 0)
+Avatar.BackgroundColor3 = Color3.fromRGB(120, 80, 255)
+Avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
+
+local AvatarCorner = Instance.new("UICorner")
+AvatarCorner.CornerRadius = UDim.new(1, 0)
+AvatarCorner.Parent = Avatar
+
+-- USERNAME
+local Username = Instance.new("TextLabel")
+Username.Name = "Username"
+Username.Size = UDim2.new(1, 0, 0.3, 0)
+Username.Position = UDim2.new(0, 0, 0.7, 0)
+Username.BackgroundTransparency = 1
+Username.Text = player.Name
+Username.TextColor3 = Color3.fromRGB(220, 220, 255)
+Username.TextScaled = true
+Username.Font = Enum.Font.GothamMedium
+
+-- MENU ITEMS
+local MenuItems = {
+    {Name = "Dashboard", Icon = "📊", Color = Color3.fromRGB(120, 80, 255)},
+    {Name = "Executor", Icon = "💻", Color = Color3.fromRGB(80, 180, 255)},
+    {Name = "Script Hub", Icon = "📁", Color = Color3.fromRGB(255, 120, 80)},
+    {Name = "Settings", Icon = "⚙️", Color = Color3.fromRGB(180, 255, 80)},
+    {Name = "Visuals", Icon = "👁️", Color = Color3.fromRGB(255, 80, 180)},
+    {Name = "Teleports", Icon = "📍", Color = Color3.fromRGB(255, 180, 80)},
+    {Name = "Credits", Icon = "⭐", Color = Color3.fromRGB(180, 80, 255)},
+    {Name = "Chaos Mode", Icon = "😈", Color = Color3.fromRGB(255, 60, 60)}
+}
+
+local MenuButtons = {}
+local MenuContainer = Instance.new("ScrollingFrame")
+MenuContainer.Name = "MenuContainer"
+MenuContainer.Size = UDim2.new(1, 0, 0.8, 0)
+MenuContainer.Position = UDim2.new(0, 0, 0.15, 0)
+MenuContainer.BackgroundTransparency = 1
+MenuContainer.ScrollBarThickness = 0
+MenuContainer.CanvasSize = UDim2.new(0, 0, #MenuItems * 0.12, 0)
+
+local MenuLayout = Instance.new("UIListLayout")
+MenuLayout.Padding = UDim.new(0.01, 0)
+MenuLayout.Parent = MenuContainer
+
+for i, item in ipairs(MenuItems) do
+    local MenuButton = Instance.new("TextButton")
+    MenuButton.Name = item.Name
+    MenuButton.Size = UDim2.new(0.9, 0, 0.1, 0)
+    MenuButton.Position = UDim2.new(0.05, 0, 0, 0)
+    MenuButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    MenuButton.Text = ""
+    MenuButton.AutoButtonColor = false
+    
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0.15, 0)
+    ButtonCorner.Parent = MenuButton
+    
+    -- ICON
+    local Icon = Instance.new("TextLabel")
+    Icon.Name = "Icon"
+    Icon.Size = UDim2.new(0.25, 0, 0.8, 0)
+    Icon.Position = UDim2.new(0.05, 0, 0.1, 0)
+    Icon.BackgroundTransparency = 1
+    Icon.Text = item.Icon
+    Icon.TextColor3 = item.Color
+    Icon.TextScaled = true
+    Icon.Font = Enum.Font.GothamBold
+    Icon.Parent = MenuButton
+    
+    -- TEXT
+    local Text = Instance.new("TextLabel")
+    Text.Name = "Text"
+    Text.Size = UDim2.new(0.6, 0, 0.8, 0)
+    Text.Position = UDim2.new(0.3, 0, 0.1, 0)
+    Text.BackgroundTransparency = 1
+    Text.Text = item.Name
+    Text.TextColor3 = Color3.fromRGB(220, 220, 255)
+    Text.TextScaled = true
+    Text.Font = Enum.Font.GothamMedium
+    Text.TextXAlignment = Enum.TextXAlignment.Left
+    Text.Parent = MenuButton
+    
+    -- HOVER EFFECT
+    MenuButton.MouseEnter:Connect(function()
+        TweenService:Create(MenuButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        }):Play()
+        TweenService:Create(Icon, TweenInfo.new(0.2), {
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+    
+    MenuButton.MouseLeave:Connect(function()
+        TweenService:Create(MenuButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        }):Play()
+        TweenService:Create(Icon, TweenInfo.new(0.2), {
+            TextColor3 = item.Color
+        }):Play()
+    end)
+    
+    -- CLICK EFFECT
+    MenuButton.MouseButton1Click:Connect(function()
+        for _, btn in ipairs(MenuButtons) do
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+            }):Play()
+        end
+        
+        TweenService:Create(MenuButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = item.Color
+        }):Play()
+        
+        -- Switch content
+        SwitchContent(item.Name)
+    end)
+    
+    MenuButton.Parent = MenuContainer
+    table.insert(MenuButtons, MenuButton)
+end
+
+-- CONTENT AREA
+local ContentArea = Instance.new("Frame")
+ContentArea.Name = "ContentArea"
+ContentArea.Size = UDim2.new(0.82, 0, 0.94, 0)
+ContentArea.Position = UDim2.new(0.18, 0, 0.06, 0)
+ContentArea.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+ContentArea.BorderSizePixel = 0
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 0)
+ContentCorner.Parent = ContentArea
+
+-- TAB SYSTEM
+local TabContainer = Instance.new("Frame")
+TabContainer.Name = "TabContainer"
+TabContainer.Size = UDim2.new(1, 0, 0.06, 0)
+TabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+TabContainer.BorderSizePixel = 0
+
+local TabList = Instance.new("ScrollingFrame")
+TabList.Name = "TabList"
+TabList.Size = UDim2.new(1, -50, 1, 0)
+TabList.BackgroundTransparency = 1
+TabList.ScrollingDirection = Enum.ScrollingDirection.X
+TabList.ScrollBarThickness = 0
+TabList.CanvasSize = UDim2.new(2, 0, 0, 0)
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.FillDirection = Enum.FillDirection.Horizontal
+TabLayout.Padding = UDim.new(0, 5)
+TabLayout.Parent = TabList
+
+-- ADD TAB BUTTON
+local AddTabButton = Instance.new("TextButton")
+AddTabButton.Name = "AddTabButton"
+AddTabButton.Size = UDim2.new(0.04, 0, 0.7, 0)
+AddTabButton.Position = UDim2.new(0.95, 0, 0.15, 0)
+AddTabButton.BackgroundColor3 = Color3.fromRGB(80, 180, 255)
+AddTabButton.Text = "+"
+AddTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+AddTabButton.TextScaled = true
+AddTabButton.Font = Enum.Font.GothamBold
+
+local AddTabCorner = Instance.new("UICorner")
+AddTabCorner.CornerRadius = UDim.new(0.3, 0)
+AddTabCorner.Parent = AddTabButton
+
+-- MAIN CONTENT
+local MainContent = Instance.new("ScrollingFrame")
+MainContent.Name = "MainContent"
+MainContent.Size = UDim2.new(1, 0, 0.94, 0)
+MainContent.Position = UDim2.new(0, 0, 0.06, 0)
+MainContent.BackgroundTransparency = 1
+MainContent.ScrollBarThickness = 8
+MainContent.ScrollBarImageColor3 = Color3.fromRGB(120, 80, 255)
+
+-- STATS WIDGET
+local StatsWidget = Instance.new("Frame")
+StatsWidget.Name = "StatsWidget"
+StatsWidget.Size = UDim2.new(0.95, 0, 0.3, 0)
+StatsWidget.Position = UDim2.new(0.025, 0, 0.02, 0)
+StatsWidget.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+
+local StatsCorner = Instance.new("UICorner")
+StatsCorner.CornerRadius = UDim.new(0.02, 0)
+StatsCorner.Parent = StatsWidget
+
+-- STATS TITLE
+local StatsTitle = Instance.new("TextLabel")
+StatsTitle.Name = "StatsTitle"
+StatsTitle.Size = UDim2.new(1, 0, 0.2, 0)
+StatsTitle.BackgroundTransparency = 1
+StatsTitle.Text = "📊 SYSTEM STATUS"
+StatsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatsTitle.TextScaled = true
+StatsTitle.Font = Enum.Font.GothamBold
+StatsTitle.Parent = StatsWidget
+
+-- STATS GRID
+local StatsGrid = Instance.new("UIGridLayout")
+StatsGrid.CellSize = UDim2.new(0.3, 0, 0.7, 0)
+StatsGrid.CellPadding = UDim2.new(0.03, 0, 0, 0)
+StatsGrid.StartCorner = Enum.StartCorner.TopLeft
+StatsGrid.Parent = StatsWidget
+
+local statCards = {
+    {Name = "FPS", Value = "60", Color = Color3.fromRGB(80, 180, 255)},
+    {Name = "PING", Value = "30ms", Color = Color3.fromRGB(180, 255, 80)},
+    {Name = "MEMORY", Value = "45%", Color = Color3.fromRGB(255, 180, 80)}
+}
+
+for _, stat in ipairs(statCards) do
+    local StatCard = Instance.new("Frame")
+    StatCard.Name = stat.Name
+    StatCard.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    
+    local CardCorner = Instance.new("UICorner")
+    CardCorner.CornerRadius = UDim.new(0.1, 0)
+    CardCorner.Parent = StatCard
+    
+    local StatName = Instance.new("TextLabel")
+    StatName.Name = "Name"
+    StatName.Size = UDim2.new(1, 0, 0.4, 0)
+    StatName.BackgroundTransparency = 1
+    StatName.Text = stat.Name
+    StatName.TextColor3 = Color3.fromRGB(180, 180, 200)
+    StatName.TextScaled = true
+    StatName.Font = Enum.Font.GothamMedium
+    StatName.Parent = StatCard
+    
+    local StatValue = Instance.new("TextLabel")
+    StatValue.Name = "Value"
+    StatValue.Size = UDim2.new(1, 0, 0.6, 0)
+    StatValue.Position = UDim2.new(0, 0, 0.4, 0)
+    StatValue.BackgroundTransparency = 1
+    StatValue.Text = stat.Value
+    StatValue.TextColor3 = stat.Color
+    StatValue.TextScaled = true
+    StatValue.Font = Enum.Font.GothamBold
+    StatValue.Parent = StatCard
+    
+    StatCard.Parent = StatsWidget
+end
+
+-- SCRIPTS WIDGET
+local ScriptsWidget = Instance.new("Frame")
+ScriptsWidget.Name = "ScriptsWidget"
+ScriptsWidget.Size = UDim2.new(0.95, 0, 0.5, 0)
+ScriptsWidget.Position = UDim2.new(0.025, 0, 0.34, 0)
+ScriptsWidget.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+
+local ScriptsCorner = Instance.new("UICorner")
+ScriptsCorner.CornerRadius = UDim.new(0.02, 0)
+ScriptsCorner.Parent = ScriptsWidget
+
+-- SCRIPTS TITLE
+local ScriptsTitle = Instance.new("TextLabel")
+ScriptsTitle.Name = "ScriptsTitle"
+ScriptsTitle.Size = UDim2.new(1, 0, 0.15, 0)
+ScriptsTitle.BackgroundTransparency = 1
+ScriptsTitle.Text = "💻 PREMIUM SCRIPTS"
+ScriptsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ScriptsTitle.TextScaled = true
+ScriptsTitle.Font = Enum.Font.GothamBold
+ScriptsTitle.Parent = ScriptsWidget
+
+-- SCRIPTS LIST
+local scriptList = {
+    {Name = "Infinite Yield", Author = "Edge", Color = Color3.fromRGB(255, 120, 80)},
+    {Name = "Dark Dex", Author = "Beta", Color = Color3.fromRGB(180, 80, 255)},
+    {Name = "Simple Spy", Author = "Exun", Color = Color3.fromRGB(80, 180, 255)},
+    {Name = "Remote Spy", Author = "Sentinel", Color = Color3.fromRGB(255, 180, 80)}
+}
+
+local ScriptsList = Instance.new("ScrollingFrame")
+ScriptsList.Name = "ScriptsList"
+ScriptsList.Size = UDim2.new(0.95, 0, 0.8, 0)
+ScriptsList.Position = UDim2.new(0.025, 0, 0.15, 0)
+ScriptsList.BackgroundTransparency = 1
+ScriptsList.ScrollBarThickness = 0
+
+local ScriptsLayout = Instance.new("UIListLayout")
+ScriptsLayout.Padding = UDim.new(0.02, 0)
+ScriptsLayout.Parent = ScriptsList
+
+for i, script in ipairs(scriptList) do
+    local ScriptButton = Instance.new("TextButton")
+    ScriptButton.Name = script.Name
+    ScriptButton.Size = UDim2.new(1, 0, 0.2, 0)
+    ScriptButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    ScriptButton.Text = ""
+    ScriptButton.AutoButtonColor = false
+    
+    local ScriptCorner = Instance.new("UICorner")
+    ScriptCorner.CornerRadius = UDim.new(0.1, 0)
+    ScriptCorner.Parent = ScriptButton
+    
+    local ScriptName = Instance.new("TextLabel")
+    ScriptName.Name = "Name"
+    ScriptName.Size = UDim2.new(0.7, 0, 0.6, 0)
+    ScriptName.Position = UDim2.new(0.05, 0, 0.1, 0)
+    ScriptName.BackgroundTransparency = 1
+    ScriptName.Text = script.Name
+    ScriptName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ScriptName.TextScaled = true
+    ScriptName.Font = Enum.Font.GothamBold
+    ScriptName.TextXAlignment = Enum.TextXAlignment.Left
+    ScriptName.Parent = ScriptButton
+    
+    local ScriptAuthor = Instance.new("TextLabel")
+    ScriptAuthor.Name = "Author"
+    ScriptAuthor.Size = UDim2.new(0.7, 0, 0.4, 0)
+    ScriptAuthor.Position = UDim2.new(0.05, 0, 0.6, 0)
+    ScriptAuthor.BackgroundTransparency = 1
+    ScriptAuthor.Text = "by " .. script.Author
+    ScriptAuthor.TextColor3 = Color3.fromRGB(180, 180, 200)
+    ScriptAuthor.TextScaled = true
+    ScriptAuthor.Font = Enum.Font.GothamMedium
+    ScriptAuthor.TextXAlignment = Enum.TextXAlignment.Left
+    ScriptAuthor.Parent = ScriptButton
+    
+    local ExecuteButton = Instance.new("TextButton")
+    ExecuteButton.Name = "ExecuteButton"
+    ExecuteButton.Size = UDim2.new(0.2, 0, 0.7, 0)
+    ExecuteButton.Position = UDim2.new(0.75, 0, 0.15, 0)
+    ExecuteButton.BackgroundColor3 = script.Color
+    ExecuteButton.Text = "RUN"
+    ExecuteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ExecuteButton.TextScaled = true
+    ExecuteButton.Font = Enum.Font.GothamBold
+    
+    local ExecuteCorner = Instance.new("UICorner")
+    ExecuteCorner.CornerRadius = UDim.new(0.2, 0)
+    ExecuteCorner.Parent = ExecuteButton
+    
+    ExecuteButton.MouseButton1Click:Connect(function()
+        print("😹 EXECUTING SCRIPT: " .. script.Name .. " | BY NASZX❤🤭")
+    end)
+    
+    ExecuteButton.Parent = ScriptButton
+    ScriptButton.Parent = ScriptsList
+    
+    -- HOVER EFFECT
+    ScriptButton.MouseEnter:Connect(function()
+        TweenService:Create(ScriptButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+        }):Play()
+    end)
+    
+    ScriptButton.MouseLeave:Connect(function()
+        TweenService:Create(ScriptButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        }):Play()
+    end)
+end
+
+-- FOOTER
+local Footer = Instance.new("Frame")
+Footer.Name = "Footer"
+Footer.Size = UDim2.new(1, 0, 0.04, 0)
+Footer.Position = UDim2.new(0, 0, 0.96, 0)
+Footer.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+
+local FooterText = Instance.new("TextLabel")
+FooterText.Name = "FooterText"
+FooterText.Size = UDim2.new(1, 0, 1, 0)
+FooterText.BackgroundTransparency = 1
+FooterText.Text = "⚡ 99-V3 PREMIUM UI | BY NASZX❤🤭 | CHANNEL: https://whatsapp.com/channel/0029VbCHHlkE50Udyn5xDw0g"
+FooterText.TextColor3 = Color3.fromRGB(180, 180, 200)
+FooterText.TextScaled = true
+FooterText.Font = Enum.Font.GothamMedium
+FooterText.Parent = Footer
+
+-- FUNCTION TO SWITCH CONTENT
+local function SwitchContent(contentName)
+    print("😹 SWITCHING TO: " .. contentName .. " | BY NASZX❤🤭")
+    -- Add content switching logic here
+end
+
+-- SETUP PARENTING
+TopBar.Parent = MainContainer
+Logo.Parent = TopBar
+CloseButton.Parent = TopBar
+MinButton.Parent = TopBar
+Sidebar.Parent = MainContainer
+UserProfile.Parent = Sidebar
+Avatar.Parent = UserProfile
+Username.Parent = UserProfile
+MenuContainer.Parent = Sidebar
+ContentArea.Parent = MainContainer
+TabContainer.Parent = ContentArea
+TabList.Parent = TabContainer
+AddTabButton.Parent = TabContainer
+MainContent.Parent = ContentArea
+StatsWidget.Parent = MainContent
+ScriptsWidget.Parent = MainContent
+ScriptsList.Parent = ScriptsWidget
+Footer.Parent = MainContainer
+FooterText.Parent = Footer
+MainContainer.Parent = PremiumUI
+
+-- DRAGGABLE WINDOW
+local dragging = false
+local dragStart, frameStart
+
+MainContainer.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        frameStart = MainContainer.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainContainer.Position = UDim2.new(
+            frameStart.X.Scale,
+            frameStart.X.Offset + delta.X,
+            frameStart.Y.Scale,
+            frameStart.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- CLOSE BUTTON FUNCTION
+CloseButton.MouseButton1Click:Connect(function()
+    PremiumUI:Destroy()
+    Blur:Destroy()
+    print("😹 UI CLOSED | BY NASZX❤🤭")
+end)
+
+-- MINIMIZE FUNCTION
+local minimized = false
+MinButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        TweenService:Create(MainContainer, TweenInfo.new(0.3), {
+            Size = UDim2.new(0.3, 0, 0.06, 0)
+        }):Play()
+        TweenService:Create(Shadow, TweenInfo.new(0.3), {
+            Size = UDim2.new(1, 30, 1, 30)
+        }):Play()
+    else
+        TweenService:Create(MainContainer, TweenInfo.new(0.3), {
+            Size = UDim2.new(0.85, 0, 0.8, 0)
+        }):Play()
+    end
+end)
+
+-- ADD TAB FUNCTION
+AddTabButton.MouseButton1Click:Connect(function()
+    local newTab = Instance.new("TextButton")
+    newTab.Name = "Tab_" .. os.time()
+    newTab.Size = UDim2.new(0.15, 0, 0.8, 0)
+    newTab.Position = UDim2.new(0, 0, 0.1, 0)
+    newTab.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    newTab.Text = "New Tab"
+    newTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    newTab.TextScaled = true
+    newTab.Font = Enum.Font.GothamMedium
+    
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0.2, 0)
+    TabCorner.Parent = newTab
+    
+    newTab.Parent = TabList
+end)
+
+-- FPS COUNTER
+local fps = 0
+local lastTime = tick()
+local frameCount = 0
+
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    if currentTime - lastTime >= 1 then
+        fps = math.floor(frameCount / (currentTime - lastTime))
+        frameCount = 0
+        lastTime = currentTime
+        
+        -- Update FPS display
+        if StatsWidget:FindFirstChild("FPS") then
+            StatsWidget.FPS.Value.Text = tostring(fps)
+        end
+    end
+end)
+
+-- INIT MESSAGE
+print([[
+    
+╔══════════════════════════════════════════╗
+║   ⚡ 99-V3 PREMIUM UI LOADED!            ║
+║   BY NASZX❤🤭                            ║
+║                                          ║
+║   FEATURES:                              ║
+║   • Modern Dark Theme                    ║
+║   • Smooth Animations                    ║
+║   • Draggable Window                     ║
+║   • Stats Monitor                        ║
+║   • Premium Scripts                      ║
+║   • Minimize/Close                       ║
+║                                          ║
+║   CHANNEL:                               ║
+║   https://whatsapp.com/channel/         ║
+║   0029VbCHHlkE50Udyn5xDw0g              ║
+╚══════════════════════════════════════════╝
+]])
+
+-- RETURN UI OBJECT
+return PremiumUI
